@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Food Battle</title>
+<style>
+:root{--bg:#0f172a;--card:rgba(15,23,42,.78);--card-2:rgba(30,41,59,.92);--text:#e5e7eb;--muted:#94a3b8;--accent:#38bdf8;--accent-2:#22c55e;--danger:#f97316;--border:rgba(148,163,184,.22);--shadow:0 20px 40px rgba(0,0,0,.35);--gold:#facc15;--hp-green:#22c55e;--hp-yellow:#eab308;--hp-red:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Inter,Arial,sans-serif;background:radial-gradient(circle at top right,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at top left,rgba(34,197,94,.16),transparent 28%),linear-gradient(135deg,#020617,#111827 45%,#0f172a);color:var(--text);min-height:100vh;overflow-x:hidden}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.hero{display:grid;gap:16px;margin-bottom:24px}
+.title{font-size:clamp(2rem,5vw,3.8rem);font-weight:800;line-height:1.05;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--muted);font-size:1.05rem;max-width:760px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:20px;backdrop-filter:blur(10px);box-shadow:var(--shadow)}
+.card h2{margin-top:0;font-size:1.35rem}.muted{color:var(--muted)}
+textarea{width:100%;background:rgba(2,6,23,.7);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:14px;font:inherit;outline:none;min-height:180px;resize:vertical;line-height:1.5}
+button{border:none;border-radius:999px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s,box-shadow .15s}
+button:hover{transform:translateY(-1px)}button:active{transform:translateY(1px)}button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.primary{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff;box-shadow:0 10px 24px rgba(37,99,235,.28)}
+.secondary{background:rgba(148,163,184,.12);color:var(--text);border:1px solid var(--border)}
+.danger{background:linear-gradient(135deg,var(--danger),#ea580c);color:#fff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(148,163,184,.12);color:var(--muted);font-size:.9rem;margin-top:12px}
+.tips{grid-column:1/-1}
+.battle-area{display:none;grid-column:1/-1}.battle-area.active{display:block}
+.battle-header{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.progress{color:var(--muted);font-weight:600}
+.bracket-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:rgba(2,6,23,.5);border:1px solid var(--border);border-radius:16px}
+.bracket-item{padding:6px 12px;border-radius:999px;font-size:.85rem;font-weight:600;background:rgba(148,163,184,.1);color:var(--muted);border:1px solid var(--border);transition:all .3s}
+.bracket-item.alive{background:rgba(34,197,94,.15);color:var(--accent-2);border-color:rgba(34,197,94,.3)}
+.bracket-item.eliminated{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2);text-decoration:line-through;opacity:.5}
+.bracket-item.fighting{background:rgba(250,204,21,.2);color:var(--gold);border-color:rgba(250,204,21,.4);animation:bpulse 1s ease infinite}
+@keyframes bpulse{0%,100%{box-shadow:0 0 0 0 rgba(250,204,21,.3)}50%{box-shadow:0 0 12px 4px rgba(250,204,21,.2)}}
+.arena-wrapper{position:relative;overflow:hidden;border-radius:24px;background:radial-gradient(ellipse at center,rgba(15,23,42,.9),rgba(2,6,23,.98));border:2px solid var(--border);min-height:420px}
+.arena-bg{position:absolute;inset:0;background:radial-gradient(circle at 20% 80%,rgba(239,68,68,.08),transparent 40%),radial-gradient(circle at 80% 80%,rgba(56,189,248,.08),transparent 40%),radial-gradient(circle at 50% 20%,rgba(250,204,21,.06),transparent 50%);pointer-events:none;transition:background .5s}
+.arena-wrapper.intense .arena-bg{background:radial-gradient(circle at 20% 80%,rgba(239,68,68,.2),transparent 40%),radial-gradient(circle at 80% 80%,rgba(56,189,248,.2),transparent 40%),radial-gradient(circle at 50% 20%,rgba(250,204,21,.16),transparent 50%)}
+.arena{position:relative;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;padding:28px;z-index:1}
+.countdown-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,6,23,.88);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s}
+.countdown-overlay.active{opacity:1;pointer-events:all}
+.countdown-number{font-size:8rem;font-weight:900;color:var(--gold);text-shadow:0 0 60px rgba(250,204,21,.5);animation:cpop .6s ease}
+.countdown-sub{font-size:1.2rem;color:var(--muted);margin-top:8px;font-weight:600}
+@keyframes cpop{0%{transform:scale(2.5);opacity:0}50%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
+.fighter{background:var(--card-2);border:2px solid var(--border);border-radius:24px;padding:22px;min-height:380px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s,border-color .3s,opacity .3s,filter .3s}
+.fighter::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top,rgba(255,255,255,.07),transparent 55%);pointer-events:none}
+.fighter.hit-flash{animation:hitF .3s}@keyframes hitF{0%{filter:brightness(1)}30%{filter:brightness(2.5) saturate(.3)}100%{filter:brightness(1)}}
+.fighter.shake{animation:fshake .4s}@keyframes fshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-1deg)}40%{transform:translateX(8px) rotate(1deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.fighter.big-shake{animation:bshk .5s}@keyframes bshk{0%,100%{transform:translateX(0)}10%{transform:translateX(-12px) rotate(-2deg)}30%{transform:translateX(12px) rotate(2deg)}50%{transform:translateX(-8px)}70%{transform:translateX(8px)}}
+.fighter.winner-glow{border-color:rgba(250,204,21,.7);box-shadow:0 0 50px rgba(250,204,21,.25),0 0 100px rgba(250,204,21,.1);animation:wg 1s ease infinite alternate}
+@keyframes wg{0%{box-shadow:0 0 50px rgba(250,204,21,.25)}100%{box-shadow:0 0 80px rgba(250,204,21,.35)}}
+.fighter.loser-fade{opacity:.3;filter:grayscale(.7);transform:scale(.94)}
+.fighter.atk-r{animation:atkR .35s}@keyframes atkR{0%{transform:translateX(0)}40%{transform:translateX(35px) rotate(3deg)}100%{transform:translateX(0)}}
+.fighter.atk-l{animation:atkL .35s}@keyframes atkL{0%{transform:translateX(0)}40%{transform:translateX(-35px) rotate(-3deg)}100%{transform:translateX(0)}}
+.fighter.satk-r{animation:sR .5s}@keyframes sR{0%{transform:translateX(0) scale(1)}20%{transform:translateX(-10px) scale(1.05)}50%{transform:translateX(60px) rotate(4deg) scale(1.1)}100%{transform:translateX(0) scale(1)}}
+.fighter.satk-l{animation:sL .5s}@keyframes sL{0%{transform:translateX(0) scale(1)}20%{transform:translateX(10px) scale(1.05)}50%{transform:translateX(-60px) rotate(-4deg) scale(1.1)}100%{transform:translateX(0) scale(1)}}
+.fighter.heal-glow{animation:hg .6s}@keyframes hg{0%{box-shadow:0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 40px rgba(34,197,94,.4),inset 0 0 30px rgba(34,197,94,.15)}100%{box-shadow:0 0 0 rgba(34,197,94,0)}}
+.fighter.poison-pulse{animation:pp .5s}@keyframes pp{0%{filter:hue-rotate(0)}50%{filter:hue-rotate(80deg) brightness(1.2)}100%{filter:hue-rotate(0)}}
+.fighter.buff-glow{animation:bg .6s}@keyframes bg{0%{box-shadow:0 0 0 rgba(168,85,247,0)}50%{box-shadow:0 0 40px rgba(168,85,247,.4)}100%{box-shadow:0 0 0 rgba(168,85,247,0)}}
+.fighter.ko-spin{animation:ko .8s forwards}@keyframes ko{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.1) rotate(5deg)}60%{transform:scale(.7) rotate(-10deg)}100%{transform:scale(.94) rotate(0);opacity:.3;filter:grayscale(.7)}}
+.emoji{font-size:4rem;margin-bottom:8px;transition:transform .3s}.fighter:hover .emoji{transform:scale(1.1) rotate(-5deg)}
+.food-name{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:800;word-break:break-word}
+.fighter-label{color:var(--muted);font-size:.85rem;margin-top:2px}
+.score{display:inline-flex;width:fit-content;gap:8px;align-items:center;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.24);padding:6px 10px;border-radius:999px;color:#bae6fd;font-weight:700;margin-top:6px;font-size:.85rem}
+.hp-section{margin-top:12px}.hp-label{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.hp-bar-outer{width:100%;height:20px;background:rgba(2,6,23,.6);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.hp-bar-inner{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--hp-green),#4ade80);transition:width .5s,background .5s;position:relative;box-shadow:0 0 10px rgba(34,197,94,.5)}
+.hp-bar-inner.medium{background:linear-gradient(90deg,var(--hp-yellow),#fbbf24);box-shadow:0 0 10px rgba(234,179,8,.5)}
+.hp-bar-inner.low{background:linear-gradient(90deg,var(--hp-red),#f87171);box-shadow:0 0 10px rgba(239,68,68,.5);animation:hpp .6s infinite}
+@keyframes hpp{0%,100%{opacity:1}50%{opacity:.65}}
+.hp-bar-inner::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(to bottom,rgba(255,255,255,.3),transparent);border-radius:999px 999px 0 0}
+.nrg-section{margin-top:6px}.nrg-label{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;color:#c084fc;margin-bottom:3px}
+.nrg-bar-outer{width:100%;height:8px;background:rgba(2,6,23,.5);border-radius:999px;overflow:hidden;border:1px solid rgba(168,85,247,.2)}
+.nrg-bar-inner{height:100%;border-radius:999px;background:linear-gradient(90deg,#a855f7,#d946ef);transition:width .4s;box-shadow:0 0 6px rgba(168,85,247,.4)}
+.stat-bars{display:grid;gap:5px;margin-top:10px}
+.stat-row{display:grid;grid-template-columns:50px 1fr 28px;align-items:center;gap:6px;font-size:.72rem}
+.stat-name{color:var(--muted);font-weight:600}
+.stat-bar-outer{height:6px;background:rgba(2,6,23,.5);border-radius:999px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:999px;transition:width .8s}
+.stat-bar-fill.power{background:linear-gradient(90deg,#ef4444,#f97316)}.stat-bar-fill.speed{background:linear-gradient(90deg,#3b82f6,#38bdf8)}.stat-bar-fill.hype{background:linear-gradient(90deg,#a855f7,#d946ef)}.stat-bar-fill.chaos{background:linear-gradient(90deg,#22c55e,#84cc16)}.stat-bar-fill.luck{background:linear-gradient(90deg,#facc15,#f59e0b)}.stat-bar-fill.defense{background:linear-gradient(90deg,#64748b,#94a3b8)}
+.stat-val{color:var(--muted);font-weight:700;text-align:center}
+.vs{display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:900;color:var(--gold);letter-spacing:2px;text-shadow:0 0 30px rgba(250,204,21,.4)}
+.vs.fire{animation:vsf .5s ease infinite alternate}@keyframes vsf{0%{text-shadow:0 0 20px rgba(250,204,21,.4);transform:scale(1)}100%{text-shadow:0 0 50px rgba(239,68,68,.7),0 0 100px rgba(250,204,21,.4);transform:scale(1.15)}}
+.battle-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;justify-content:center}
+.fight-btn{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 10px 30px rgba(239,68,68,.3);font-size:1.1rem;padding:14px 28px;position:relative;overflow:hidden}
+.fight-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);animation:bsh 2s ease infinite}@keyframes bsh{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+.battle-log-container{margin-top:18px;background:rgba(2,6,23,.6);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.battle-log-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(148,163,184,.06);border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem}
+.battle-log-body{padding:14px 16px;max-height:300px;overflow-y:auto;font-size:.85rem;line-height:1.7}
+.log-entry{padding:4px 0;border-bottom:1px solid rgba(148,163,184,.06);animation:logIn .3s;display:flex;gap:8px;align-items:flex-start}
+.log-entry:last-child{border-bottom:none}@keyframes logIn{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
+.log-icon{flex-shrink:0;width:22px;text-align:center}.log-text{flex:1}
+.log-entry.critical{color:#fbbf24;font-weight:700}.log-entry.hit-a{color:#f87171}.log-entry.hit-b{color:#60a5fa}.log-entry.ko{color:var(--gold);font-weight:800;font-size:1.05rem}.log-entry.dodge{color:#a78bfa}.log-entry.crowd{color:var(--muted);font-style:italic}.log-entry.heal{color:#4ade80;font-weight:600}.log-entry.poison{color:#c084fc}.log-entry.buff{color:#f0abfc}.log-entry.counter{color:#fb923c;font-weight:700}.log-entry.special{color:#fde68a;font-weight:800;font-size:.95rem}.log-entry.combo{color:#f472b6;font-weight:700}
+.dmg-popup{position:absolute;font-size:1.6rem;font-weight:900;color:#ef4444;text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;animation:dpop .8s forwards;z-index:50}
+.dmg-popup.heal-pop{color:#4ade80}.dmg-popup.special-pop{color:#fbbf24;font-size:2rem}.dmg-popup.combo-pop{color:#f472b6;font-size:2rem}
+@keyframes dpop{0%{opacity:1;transform:translateY(0) scale(.5)}30%{transform:translateY(-25px) scale(1.3)}100%{opacity:0;transform:translateY(-60px) scale(.8)}}
+.particle-container{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.particle{position:absolute;border-radius:50%;pointer-events:none;animation:pfly .8s forwards}@keyframes pfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)}}
+.text-particle{position:absolute;pointer-events:none;font-weight:900;font-size:1.4rem;z-index:55;animation:tpop 1.2s forwards}@keyframes tpop{0%{opacity:0;transform:translateY(0) scale(.5)}15%{opacity:1;transform:translateY(-10px) scale(1.1)}70%{opacity:1}100%{opacity:0;transform:translateY(-50px) scale(.7)}}
+.winner{margin-top:22px;padding:28px;border-radius:24px;background:linear-gradient(135deg,rgba(250,204,21,.15),rgba(34,197,94,.12));border:1px solid rgba(250,204,21,.28);display:none;position:relative;overflow:hidden}
+.winner.active{display:block;animation:wRev .8s}@keyframes wRev{0%{opacity:0;transform:translateY(30px) scale(.95)}60%{transform:translateY(-5px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.winner h3{font-size:1.6rem}.winner-name{font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#fde68a;margin:12px 0;text-shadow:0 0 30px rgba(250,204,21,.3)}
+.ranking{margin-top:16px;display:grid;gap:10px}.rank-item{display:flex;justify-content:space-between;gap:12px;align-items:center;background:rgba(2,6,23,.45);border:1px solid var(--border);border-radius:16px;padding:12px 14px}
+.rank-left{display:flex;gap:10px;align-items:center;font-weight:700}
+.confetti-container{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.confetti-piece{position:absolute;width:10px;height:10px;top:-10px;animation:cfall linear forwards}@keyframes cfall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.screen-shake{animation:sshk .4s}@keyframes sshk{0%,100%{transform:translate(0)}15%{transform:translate(-3px,2px)}30%{transform:translate(3px,-2px)}45%{transform:translate(-2px,-1px)}60%{transform:translate(2px,1px)}}
+.screen-big-shake{animation:sbshk .5s}@keyframes sbshk{0%,100%{transform:translate(0)}10%{transform:translate(-5px,3px)}20%{transform:translate(5px,-3px)}30%{transform:translate(-4px,-2px)}40%{transform:translate(4px,2px)}}
+.status-icon{position:absolute;top:8px;right:8px;font-size:1.2rem;animation:sbob 1s ease infinite;z-index:10}@keyframes sbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.battle-log-body::-webkit-scrollbar{width:6px}.battle-log-body::-webkit-scrollbar-track{background:transparent}.battle-log-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,.2);border-radius:999px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.arena{grid-template-columns:1fr}.vs{min-height:40px}}
+</style>
+</head>
+<body>
+<div class="container" id="mainContainer">
+<section class="hero">
+<p class="pill">🏆 Food Battle for High-Tech Teams</p>
+<h1 class="title">מה אוכלים היום?</h1>
+<p class="subtitle">מכניסים אפשרויות אוכל, ונותנים להן להילחם ראש בראש. כל מאכל מקבל סטטיסטיקות אקראיות ומאוזנות! קרבות כוללים מכות, קומבואים, מהלכים מיוחדים, ריפוי, רעל ועוד!</p>
+</section>
+<section class="grid">
+<div class="card">
+<h2>1. מכניסים את המתחרים</h2>
+<p class="muted">אפשרות אחת בכל שורה. מכניסים מה שרוצים!</p>
+<textarea id="foodInput" placeholder="פיצה&#10;סושי&#10;שווארמה&#10;המבורגר&#10;סביח"></textarea>
+<div class="actions"><button class="primary" id="startBtn">התחל טורניר</button><button class="secondary" id="sampleBtn">טען דוגמה</button><button class="danger" id="clearBtn">נקה</button></div>
+</div>
+<div class="card">
+<h2>2. איך המשחק עובד</h2>
+<p class="muted">כל מאכל מקבל סטטיסטיקות אקראיות: כוח, מהירות, הייפ, כאוס, מזל והגנה. שום מאכל לא מועדף מראש!</p>
+<p class="muted">קרבות כוללים: מכות רגילות, קריטיות, קומבואים, התחמקויות, מהלכים מיוחדים, ריפוי, רעל, באפים, קאונטרים!</p>
+<div class="pill">טיפ: הכי כיף להקרין את זה במסך ישיבה ולתת לכל הצוות לצעוק.</div>
+</div>
+<div class="card battle-area" id="battleArea">
+<div class="battle-header"><div><h2>זירת הקרב</h2><div class="progress" id="progressText"></div></div><div class="actions" style="margin-top:0"><button class="secondary" id="restartBtn">טורניר חדש</button></div></div>
+<div class="bracket-bar" id="bracketBar"></div>
+<div class="arena-wrapper" id="arenaWrapper">
+<div class="arena-bg"></div><div class="particle-container" id="particleContainer"></div>
+<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div><div class="countdown-sub" id="countdownSub"></div></div>
+<div class="arena" id="arena">
+<div class="fighter" id="fighterA"><div><div class="emoji" id="emojiA">🍕</div><div class="food-name" id="foodA">פיצה</div><div class="fighter-label">מתמודד א'</div><div class="score" id="scoreA">ניצחונות: 0</div></div><div><div class="hp-section"><div class="hp-label"><span>HP</span><span id="hpTextA">100/100</span></div><div class="hp-bar-outer"><div class="hp-bar-inner" id="hpBarA" style="width:100%"></div></div></div><div class="nrg-section"><div class="nrg-label"><span>⚡ אנרגיה</span><span id="nrgTextA">0/100</span></div><div class="nrg-bar-outer"><div class="nrg-bar-inner" id="nrgBarA" style="width:0%"></div></div></div><div class="stat-bars" id="statsA"></div></div></div>
+<div class="vs" id="vsText">VS</div>
+<div class="fighter" id="fighterB"><div><div class="emoji" id="emojiB">🍣</div><div class="food-name" id="foodB">סושי</div><div class="fighter-label">מתמודד ב'</div><div class="score" id="scoreB">ניצחונות: 0</div></div><div><div class="hp-section"><div class="hp-label"><span>HP</span><span id="hpTextB">100/100</span></div><div class="hp-bar-outer"><div class="hp-bar-inner" id="hpBarB" style="width:100%"></div></div></div><div class="nrg-section"><div class="nrg-label"><span>⚡ אנרגיה</span><span id="nrgTextB">0/100</span></div><div class="nrg-bar-outer"><div class="nrg-bar-inner" id="nrgBarB" style="width:0%"></div></div></div><div class="stat-bars" id="statsB"></div></div></div>
+</div></div>
+<div class="battle-actions"><button class="fight-btn" id="fightBtn">התחל קרב!</button><button class="secondary" id="skipBtn">דלג לקרב הבא</button><button class="primary" id="autoAllBtn">הרץ את כל הטורניר</button></div>
+<div class="battle-log-container" id="battleLogContainer" style="display:none"><div class="battle-log-header"><span>יומן קרב חי</span><span class="muted" id="turnCounter">תור 0</span></div><div class="battle-log-body" id="battleLogBody"></div></div>
+<div class="winner" id="winnerBox"><h3>🥇 האלוף הבלתי מעורער</h3><div class="winner-name" id="winnerName"></div><p class="muted" id="winnerText"></p><div class="ranking" id="ranking"></div></div>
+</div>
+<div class="card tips"><h2>שדרוגים אפשריים</h2><p class="muted">אפשר בקלות להוסיף בהמשך: הצבעה, טיימר לכל קרב, שמות משתתפים, או סיבוב "גלגל הצלה".</p></div>
+</section>
+</div>
+<script src="battle.js"></script>
+</body>
+</html>
