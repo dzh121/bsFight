@@ -13,6 +13,13 @@ import {
   poisonLines,
   counterLines,
   buffLines,
+  stunLines,
+  lifestealLines,
+  shieldLines,
+  rageLines,
+  reflectLines,
+  burnLines,
+  doubleStrikeLines,
   getEmoji,
 } from "./helpers";
 import { playSound } from "./soundEngine";
@@ -91,68 +98,99 @@ function triggerFlash(flashEl, color = "red") {
   }, 180);
 }
 
-function setBanner(bannerEl, text, type = "") {
-  if (!bannerEl) return;
-  bannerEl.className = "action-banner" + (type ? ` action-${type}` : "");
-  bannerEl.innerHTML = text;
-}
-
-function clearBanners(bA, bC, bB) {
-  if (bA) {
-    bA.className = "action-banner side-a-banner active";
-    bA.innerHTML = "";
-  }
-  if (bC) {
-    bC.className = "action-banner center-banner";
-    bC.innerHTML = "";
-  }
-  if (bB) {
-    bB.className = "action-banner side-b-banner active";
-    bB.innerHTML = "";
+function clearBanners(stage) {
+  if (stage) {
+    stage.innerHTML = "";
+    stage.classList.remove("major-event");
   }
 }
 
-function setBannerZone(banners, zone, text, type = "") {
-  const { bA, bC, bB } = banners;
-  if (zone === "a" || zone === "b") {
-    // Side banners: stack entries upward like a log
-    const target = zone === "a" ? bA : bB;
-    if (!target) return;
-    target.classList.add("active");
-    // Clear center when a side event happens
-    if (bC) {
-      bC.className = "action-banner center-banner";
-      bC.innerHTML = "";
-    }
-    const entry = document.createElement("div");
-    entry.className = "banner-entry" + (type ? ` action-${type}` : "");
-    entry.innerHTML = text;
-    target.prepend(entry);
-    // Keep max 6 entries, fade oldest
-    const entries = target.querySelectorAll(".banner-entry");
-    for (let i = 0; i < entries.length; i++) {
-      entries[i].style.opacity = Math.max(0.15, 1 - i * 0.16);
-    }
-    if (entries.length > 6) {
-      for (let i = 6; i < entries.length; i++) entries[i].remove();
-    }
-  } else {
-    // Center banner: single replace, don't touch side logs
-    if (!bC) return;
-    bC.className =
-      "action-banner center-banner action-" + (type || "attack") + " active";
-    bC.innerHTML = text;
+function setBannerZone(stage, zone, text, type = "") {
+  if (!stage) return;
+  const dir = zone === "a" ? "from-a" : zone === "b" ? "from-b" : "from-center";
+  // For center zone events (impacts, KO), clear previous cards
+  if (zone === "center") {
+    stage.innerHTML = "";
+  }
+  const card = document.createElement("div");
+  card.className = `banner-card ${dir}` + (type ? ` action-${type}` : "");
+  card.innerHTML = text;
+  stage.prepend(card);
+  // Fade & shrink older cards, keep max 4
+  const cards = stage.querySelectorAll(".banner-card");
+  for (let i = 0; i < cards.length; i++) {
+    cards[i].style.opacity = Math.max(0.1, 1 - i * 0.3);
+    cards[i].style.transform = `scale(${Math.max(0.75, 1 - i * 0.07)})`;
+  }
+  if (cards.length > 4) {
+    for (let i = 4; i < cards.length; i++) cards[i].remove();
   }
 }
 
-function setActiveTurn(aEl, dEl) {
-  if (aEl) aEl.classList.add("active-turn");
-  if (dEl) dEl.classList.remove("active-turn");
+function setActiveTurn(aEl, dEl, label = "⚔️ ATTACKING") {
+  if (aEl) {
+    aEl.classList.add("active-turn");
+    let tag = aEl.querySelector(".turn-tag");
+    if (!tag) {
+      tag = document.createElement("div");
+      tag.className = "turn-tag";
+      aEl.prepend(tag);
+    }
+    tag.textContent = label;
+    tag.className = "turn-tag turn-tag-atk";
+    // Re-trigger pop animation
+    tag.style.animation = "none";
+    void tag.offsetWidth;
+    tag.style.animation = "";
+  }
+  if (dEl) {
+    dEl.classList.remove("active-turn");
+    const tag = dEl.querySelector(".turn-tag");
+    if (tag) tag.remove();
+  }
+}
+
+function updateTurnLabel(el, label) {
+  if (!el) return;
+  const tag = el.querySelector(".turn-tag");
+  if (tag) {
+    tag.textContent = label;
+    tag.style.animation = "none";
+    void tag.offsetWidth;
+    tag.style.animation = "";
+  }
+}
+
+function swapActiveTurn(aEl, dEl, label = "↩️ COUNTERING") {
+  if (dEl) {
+    dEl.classList.add("active-turn");
+    let tag = dEl.querySelector(".turn-tag");
+    if (!tag) {
+      tag = document.createElement("div");
+      tag.className = "turn-tag";
+      dEl.prepend(tag);
+    }
+    tag.textContent = label;
+    tag.className = "turn-tag turn-tag-def";
+  }
+  if (aEl) {
+    aEl.classList.remove("active-turn");
+    const tag = aEl.querySelector(".turn-tag");
+    if (tag) tag.remove();
+  }
 }
 
 function clearActiveTurn(aEl, dEl) {
-  if (aEl) aEl.classList.remove("active-turn");
-  if (dEl) dEl.classList.remove("active-turn");
+  if (aEl) {
+    aEl.classList.remove("active-turn");
+    const tag = aEl.querySelector(".turn-tag");
+    if (tag) tag.remove();
+  }
+  if (dEl) {
+    dEl.classList.remove("active-turn");
+    const tag = dEl.querySelector(".turn-tag");
+    if (tag) tag.remove();
+  }
 }
 
 function getElCenter(el, wrapperEl) {
@@ -188,6 +226,8 @@ function renderStatBars(el, stats) {
     { k: "chaos", label: "Chaos", v: stats.chaos },
     { k: "luck", label: "Luck", v: stats.luck },
     { k: "defense", label: "Defns", v: stats.defense },
+    { k: "focus", label: "Focus", v: stats.focus },
+    { k: "stamina", label: "Stmna", v: stats.stamina },
   ];
   el.innerHTML = items
     .map(
@@ -258,9 +298,8 @@ function logHpStatus(bodyEl, f1Name, hp1, f2Name, hp2) {
   );
 }
 
-export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
+export async function animatedFight(f1, f2, refs, onEvent) {
   const emit = onEvent || (() => {});
-  const { centerMode = false } = options;
   const {
     fighterA,
     fighterB,
@@ -283,31 +322,42 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     countdownOverlay,
     countdownNumber,
     countdownSub,
-    bannerA,
-    bannerCenter,
-    bannerB,
+    bannerStage,
+    buffsBarA,
+    buffsBarB,
     flashOverlay,
     vignetteOverlay,
   } = refs;
-  const banners = { bA: bannerA, bC: bannerCenter, bB: bannerB };
 
-  // Wrapper: routes side banners to center when centerMode is on
+  // Wrapper for setBannerZone on the single banner stage
   function banner(zone, text, type = "") {
-    if (centerMode && (zone === "a" || zone === "b")) {
-      setBannerZone(banners, "center", text, type);
-    } else {
-      setBannerZone(banners, zone, text, type);
-    }
+    setBannerZone(bannerStage, zone, text, type);
   }
 
   // Helper: dramatic pause for major events (crit, special, KO)
   function startMajorEvent() {
-    if (bannerCenter) bannerCenter.classList.add("major-event");
+    if (bannerStage) bannerStage.classList.add("major-event");
     if (vignetteOverlay) vignetteOverlay.classList.add("active");
   }
   function endMajorEvent() {
-    if (bannerCenter) bannerCenter.classList.remove("major-event");
+    if (bannerStage) bannerStage.classList.remove("major-event");
     if (vignetteOverlay) vignetteOverlay.classList.remove("active");
+  }
+
+  // Update the buff/status indicator bar on a fighter card
+  function updateBuffBars() {
+    const makeIcons = (poison, stun, shield, rage, reflect, burn) => {
+      let html = "";
+      if (shield > 0) html += `<span class="buff-icon buff-shield">🛡️ ${shield}</span>`;
+      if (rage > 0) html += `<span class="buff-icon buff-rage">🔥 ${rage}t</span>`;
+      if (reflect > 0) html += `<span class="buff-icon buff-reflect">🪞 ${reflect}t</span>`;
+      if (poison > 0) html += `<span class="buff-icon buff-poison">☠️ ${poison}t</span>`;
+      if (burn > 0) html += `<span class="buff-icon buff-burn">🔥 ${burn}t</span>`;
+      if (stun) html += `<span class="buff-icon buff-stun">😵 STUN</span>`;
+      return html;
+    };
+    if (buffsBarA) buffsBarA.innerHTML = makeIcons(poison1, stun1, shield1, rage1, reflect1, burn1);
+    if (buffsBarB) buffsBarB.innerHTML = makeIcons(poison2, stun2, shield2, rage2, reflect2, burn2);
   }
 
   const s1 = { ...f1.stats },
@@ -320,6 +370,16 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     poison2 = 0,
     combo1 = 0,
     combo2 = 0;
+  let stun1 = false,
+    stun2 = false;
+  let shield1 = 0,
+    shield2 = 0;
+  let rage1 = 0,
+    rage2 = 0;
+  let reflect1 = 0,
+    reflect2 = 0;
+  let burn1 = 0,
+    burn2 = 0;
   const maxTurns = rand(8, 15);
   let turn = 0;
 
@@ -335,13 +395,13 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
   addLog(
     battleLogBody,
     "📊",
-    `<b>${f1.name}</b>: 💪${s1.power} ⚡${s1.speed} 🛡${s1.defense} 🎲${s1.luck} 🌀${s1.chaos} 🔥${s1.hype}`,
+    `<b>${f1.name}</b>: 💪${s1.power} ⚡${s1.speed} 🛡${s1.defense} 🎲${s1.luck} 🌀${s1.chaos} 🔥${s1.hype} 🎯${s1.focus} 🏋${s1.stamina}`,
     "crowd",
   );
   addLog(
     battleLogBody,
     "📊",
-    `<b>${f2.name}</b>: 💪${s2.power} ⚡${s2.speed} 🛡${s2.defense} 🎲${s2.luck} 🌀${s2.chaos} 🔥${s2.hype}`,
+    `<b>${f2.name}</b>: 💪${s2.power} ⚡${s2.speed} 🛡${s2.defense} 🎲${s2.luck} 🌀${s2.chaos} 🔥${s2.hype} 🎯${s2.focus} 🏋${s2.stamina}`,
     "crowd",
   );
   addLog(
@@ -397,7 +457,57 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       `<b>── Turn ${turnNum} │ ${atk.name} attacks ──</b>`,
       "crowd",
     );
-    await delay(700);
+    updateBuffBars();
+    await delay(500);
+
+    // STUN CHECK — skip turn if stunned
+    const amIStunned = isA ? stun1 : stun2;
+    if (amIStunned) {
+      updateTurnLabel(aEl, "😵 STUNNED");
+      if (isA) stun1 = false;
+      else stun2 = false;
+      aEl.classList.remove("stunned");
+      banner(
+        isA ? "a" : "b",
+        `😵 Still stunned... <b>[skip]</b>`,
+        "stun",
+      );
+      playSound("stunSkip");
+      addLog(
+        battleLogBody,
+        "😵",
+        `${atk.name} is still dazed and can't move! Turn skipped.`,
+        "stun",
+      );
+      applyAnim(aEl, "stun-zap", 600);
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      updateBuffBars();
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // Rage tick — decrement rage counter
+    const myRage = isA ? rage1 : rage2;
+    if (myRage > 0) {
+      if (isA) rage1--;
+      else rage2--;
+      if ((isA ? rage1 : rage2) <= 0) {
+        aEl.classList.remove("enraged");
+        setStatus(aEl, null);
+        addLog(battleLogBody, "🧊", `${atk.name}'s rage has faded.`, "crowd");
+      }
+    }
+
+    // Reflect tick
+    const myReflect = isA ? reflect1 : reflect2;
+    if (myReflect > 0) {
+      if (isA) reflect1--;
+      else reflect2--;
+      if ((isA ? reflect1 : reflect2) <= 0) {
+        addLog(battleLogBody, "🪞", `${atk.name}'s reflect faded.`, "crowd");
+      }
+    }
 
     if (hp1 <= 35 || hp2 <= 35) arenaWrapper.classList.add("intense");
 
@@ -420,19 +530,52 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `☠️ Poison tick <b>[-${pd}hp]</b>`,
         "poison",
       );
-      playSound("poison");
+      playSound("poisonTick");
       addLog(
         battleLogBody,
         "☠️",
-        `${atk.name} takes <b>${pd}</b> poison damage! (${isA ? poison1 : poison2} poison turns left)`,
+        `${atk.name} takes <b>${pd}</b> poison damage! (${isA ? poison1 : poison2} turns left)`,
         "poison",
       );
       if ((isA ? hp1 : hp2) <= 0) break;
-      await delay(800);
+      await delay(500);
     }
 
-    // Energy gain
-    const nrgGain = rand(12, 22);
+    // Burn tick — damage increases each tick
+    const myBurn = isA ? burn1 : burn2;
+    if (myBurn > 0) {
+      const bd = rand(2, 5) + (3 - myBurn); // increases as turns decrease
+      if (isA) {
+        hp1 = Math.max(0, hp1 - bd);
+        burn1--;
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+        if (burn1 <= 0) aEl.classList.remove("burning");
+      } else {
+        hp2 = Math.max(0, hp2 - bd);
+        burn2--;
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+        if (burn2 <= 0) aEl.classList.remove("burning");
+      }
+      applyAnim(aEl, "burn-pulse", 500);
+      playSound("burnTick");
+      banner(
+        isA ? "a" : "b",
+        `🔥 Burn tick <b>[-${bd}hp]</b>`,
+        "burn",
+      );
+      addLog(
+        battleLogBody,
+        "🔥",
+        `${atk.name} takes <b>${bd}</b> burn damage! (${isA ? burn1 : burn2} turns left)`,
+        "burn",
+      );
+      if ((isA ? hp1 : hp2) <= 0) break;
+      await delay(400);
+    }
+
+    // Energy gain (focus boosts energy)
+    const focusBonus = Math.round((isA ? s1.focus : s2.focus) / 15);
+    const nrgGain = rand(12, 22) + focusBonus;
     if (isA) {
       nrg1 = Math.min(MAX_NRG, nrg1 + nrgGain);
       updateNrgBar(nrgBarA, nrgTextA, nrg1);
@@ -446,9 +589,10 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     const myHp = isA ? hp1 : hp2;
 
     // SPECIAL MOVE
-    if (myNrg >= 70 && roll < 16) {
-      if (isA) nrg1 -= 70;
-      else nrg2 -= 70;
+    if (myNrg >= 60 && roll < 20 + aS.focus / 20) {
+      updateTurnLabel(aEl, "⚡ SPECIAL MOVE");
+      if (isA) nrg1 -= 60;
+      else nrg2 -= 60;
       updateNrgBar(
         isA ? nrgBarA : nrgBarB,
         isA ? nrgTextA : nrgTextB,
@@ -461,14 +605,15 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `⚡ Charging energy...`,
         "special",
       );
-      playSound("specialMove");
+      playSound("specialCharge");
       addLog(
         battleLogBody,
         "⚡",
         `${atk.name} is charging energy...`,
         "special",
       );
-      await delay(900);
+      await delay(600);
+      playSound("specialMove");
       const spName = pick(specialNames);
       banner(
         isA ? "a" : "b",
@@ -489,6 +634,7 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       const c = getElCenter(dEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#ffd700", 24);
       triggerFlash(flashOverlay, "gold");
+      playSound("specialImpact");
       spawnTextParticle(
         particleContainer,
         c.x + rand(-30, 30),
@@ -497,7 +643,7 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         "#fde68a",
       );
       screenShake(mainContainer, true);
-      await delay(500);
+      await delay(350);
       if (isA) {
         hp2 = Math.max(0, hp2 - dmg);
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
@@ -519,7 +665,7 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       );
       if (isA) combo1 = 0;
       else combo2 = 0;
-      await delay(900);
+      await delay(600);
       endMajorEvent();
       if (Math.random() < 0.5)
         addLog(battleLogBody, "📢", pick(crowdLines), "crowd");
@@ -529,8 +675,10 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     }
 
     // HEAL
-    if (myHp < 40 && roll < 16 + aS.luck / 7) {
-      const heal = rand(10, 20);
+    if (myHp < 50 && roll < 22 + aS.luck / 6) {
+      updateTurnLabel(aEl, "💚 HEALING");
+      const staminaBonus = Math.round(aS.stamina / 12);
+      const heal = rand(10, 20) + staminaBonus;
       banner(
         isA ? "a" : "b",
         `🧘 Taking a breather...`,
@@ -538,7 +686,7 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       );
       playSound("heal");
       addLog(battleLogBody, "🧘", `${atk.name} takes a breather...`, "heal");
-      await delay(800);
+      await delay(500);
       if (isA) {
         hp1 = Math.min(MAX_HP, hp1 + heal);
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
@@ -570,7 +718,8 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     }
 
     // BUFF
-    if (roll > 93 && aS.hype > 45) {
+    if (roll > 88 && aS.hype > 35) {
+      updateTurnLabel(aEl, "✨ POWERING UP");
       banner(
         isA ? "a" : "b",
         `🔋 Powering up...`,
@@ -583,14 +732,14 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `${atk.name} focuses and powers up...`,
         "buff",
       );
-      await delay(700);
+      await delay(500);
       applyAnim(aEl, "buff-glow", 600);
-      const bStat = pick(["power", "speed", "chaos"]);
+      const bStat = pick(["power", "speed", "chaos", "focus", "stamina"]);
       const bAmt = rand(5, 14);
       aS[bStat] = Math.min(99, aS[bStat] + bAmt);
       renderStatBars(isA ? statsA : statsB, aS);
       setStatus(aEl, "💪");
-      const label = { power: "Power", speed: "Speed", chaos: "Chaos" }[bStat];
+      const label = { power: "Power", speed: "Speed", chaos: "Chaos", focus: "Focus", stamina: "Stamina" }[bStat];
       banner(
         isA ? "a" : "b",
         `✨ ${pick(buffLines)} <b>[${label} +${bAmt}]</b>`,
@@ -608,9 +757,247 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       continue;
     }
 
+    // SHIELD
+    const myShield = isA ? shield1 : shield2;
+    if (roll > 84 && aS.defense > 35 && myShield === 0) {
+      updateTurnLabel(aEl, "🛡️ SHIELDING");
+      const shieldHp = rand(10, 20) + Math.round(aS.stamina / 6);
+      banner(
+        isA ? "a" : "b",
+        `🛡️ Raising defenses...`,
+        "shield",
+      );
+      playSound("shield");
+      addLog(
+        battleLogBody,
+        "🛡️",
+        `${atk.name} ${pick(shieldLines)}...`,
+        "shield",
+      );
+      await delay(500);
+      applyAnim(aEl, "shield-glow", 600);
+      aEl.classList.add("shielded");
+      if (isA) shield1 = shieldHp;
+      else shield2 = shieldHp;
+      setStatus(aEl, "🛡️");
+      banner(
+        isA ? "a" : "b",
+        `🛡️ ${pick(shieldLines)} <b>[${shieldHp}hp shield]</b>`,
+        "shield",
+      );
+      addLog(
+        battleLogBody,
+        "🛡️",
+        `${atk.name} gained a <b>${shieldHp} HP</b> shield!`,
+        "shield",
+      );
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // STUN ATTACK
+    const defStunned = isA ? stun2 : stun1;
+    if (roll > 78 && aS.chaos > 45 && !defStunned) {
+      updateTurnLabel(aEl, "⚡ STUNNING");
+      banner(
+        isA ? "a" : "b",
+        `⚡ Preparing disruption...`,
+        "stun",
+      );
+      playSound("stun");
+      addLog(
+        battleLogBody,
+        "⚡",
+        `${atk.name} ${pick(stunLines)}...`,
+        "stun",
+      );
+      await delay(500);
+      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
+      await delay(350);
+      applyAnim(dEl, "stun-zap", 600);
+      triggerFlash(flashOverlay, "gold");
+      const c = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, c.x, c.y, "#fbbf24", 14);
+      spawnTextParticle(particleContainer, c.x, c.y - 20, "STUNNED!", "#fbbf24");
+      if (isA) stun2 = true;
+      else stun1 = true;
+      dEl.classList.add("stunned");
+      setStatus(dEl, "😵");
+      banner(
+        isA ? "a" : "b",
+        `😵 ${pick(stunLines)} <b>[stunned!]</b>`,
+        "stun",
+      );
+      addLog(
+        battleLogBody,
+        "😵",
+        `${def.name} is <b>STUNNED</b>! They'll skip their next turn!`,
+        "stun",
+      );
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // LIFESTEAL
+    if (roll > 70 && roll <= 78 && aS.hype > 30 && myHp < 75) {
+      updateTurnLabel(aEl, "🩸 DRAINING");
+      const lsDmg = rand(6, 13) + Math.round(aS.hype / 10);
+      const lsHeal = Math.round(lsDmg * 0.5);
+      banner(
+        isA ? "a" : "b",
+        `🩸 Going for the drain...`,
+        "lifesteal",
+      );
+      playSound("lifesteal");
+      addLog(
+        battleLogBody,
+        "🩸",
+        `${atk.name} ${pick(lifestealLines)}...`,
+        "lifesteal",
+      );
+      await delay(500);
+      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
+      await delay(350);
+      applyAnim(dEl, "lifesteal-drain", 500);
+      showPopup(dEl, "-" + lsDmg + " 🩸", "");
+      const c = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, c.x, c.y, "#dc2626", 12);
+      if (isA) {
+        hp2 = Math.max(0, hp2 - lsDmg);
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      } else {
+        hp1 = Math.max(0, hp1 - lsDmg);
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      }
+      await delay(300);
+      applyAnim(aEl, "lifesteal-heal", 500);
+      showPopup(aEl, "+" + lsHeal + " HP", "heal-pop");
+      if (isA) {
+        hp1 = Math.min(MAX_HP, hp1 + lsHeal);
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      } else {
+        hp2 = Math.min(MAX_HP, hp2 + lsHeal);
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      }
+      banner(
+        "center",
+        `🩸 ${pick(lifestealLines)} <b>[-${lsDmg}hp / +${lsHeal}hp]</b>`,
+        "lifesteal",
+      );
+      addLog(
+        battleLogBody,
+        "🩸",
+        `${atk.name} drained <b>${lsDmg} HP</b> and healed <b>${lsHeal} HP</b>!`,
+        "lifesteal",
+      );
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // REFLECT (defensive buff — bounces damage back)
+    const myReflectNow = isA ? reflect1 : reflect2;
+    if (roll > 64 && roll <= 70 && aS.defense > 40 && myReflectNow === 0) {
+      updateTurnLabel(aEl, "🪞 REFLECTING");
+      const rTurns = rand(2, 3);
+      banner(
+        isA ? "a" : "b",
+        `🪞 Setting up a mirror...`,
+        "reflect",
+      );
+      playSound("shield");
+      addLog(
+        battleLogBody,
+        "🪞",
+        `${atk.name} ${pick(reflectLines)}`,
+        "reflect",
+      );
+      await delay(500);
+      applyAnim(aEl, "reflect-flash", 500);
+      if (isA) reflect1 = rTurns;
+      else reflect2 = rTurns;
+      setStatus(aEl, "🪞");
+      banner(
+        isA ? "a" : "b",
+        `🪞 ${pick(reflectLines)} <b>[reflect ${rTurns}t]</b>`,
+        "reflect",
+      );
+      addLog(
+        battleLogBody,
+        "🪞",
+        `${atk.name} will reflect damage for <b>${rTurns}</b> turns!`,
+        "reflect",
+      );
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // BURN ATTACK (DoT that increases each tick)
+    const defBurn = isA ? burn2 : burn1;
+    if (roll > 60 && roll <= 64 && aS.chaos > 35 && defBurn === 0) {
+      updateTurnLabel(aEl, "🔥 BURNING");
+      const bTurns = 3;
+      const bDmg = rand(3, 7);
+      banner(
+        isA ? "a" : "b",
+        `🔥 Lighting the fuse...`,
+        "burn",
+      );
+      playSound("stun");
+      addLog(
+        battleLogBody,
+        "🔥",
+        `${atk.name} ${pick(burnLines)}`,
+        "burn",
+      );
+      await delay(500);
+      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
+      await delay(350);
+      applyAnim(dEl, "burn-pulse", 500);
+      if (isA) {
+        burn2 = bTurns;
+        hp2 = Math.max(0, hp2 - bDmg);
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      } else {
+        burn1 = bTurns;
+        hp1 = Math.max(0, hp1 - bDmg);
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      }
+      dEl.classList.add("burning");
+      showPopup(dEl, "-" + bDmg + " 🔥", "");
+      setStatus(dEl, "🔥");
+      const c = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, c.x, c.y, "#fb923c", 12);
+      banner(
+        isA ? "a" : "b",
+        `🔥 ${pick(burnLines)} <b>[-${bDmg}hp + ${bTurns}t burn]</b>`,
+        "burn",
+      );
+      addLog(
+        battleLogBody,
+        "🔥",
+        `${def.name} is <b>BURNING</b>! -${bDmg} HP + burn for ${bTurns} turns!`,
+        "burn",
+      );
+      if (isA) combo1 = 0;
+      else combo2 = 0;
+      logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
+      await delay(TURN_DELAY);
+      continue;
+    }
+
     // POISON ATTACK
     const defPoison = isA ? poison2 : poison1;
-    if (roll > 87 && aS.chaos > 50 && defPoison === 0) {
+    if (roll > 82 && aS.chaos > 40 && defPoison === 0) {
+      updateTurnLabel(aEl, "🧪 POISONING");
       banner(
         isA ? "a" : "b",
         `🧪 Plotting something nasty...`,
@@ -623,9 +1010,9 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `${atk.name} is plotting something nasty...`,
         "poison",
       );
-      await delay(700);
+      await delay(500);
       applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
-      await delay(550);
+      await delay(350);
       applyAnim(dEl, "poison-pulse", 500);
       const pTurns = rand(2, 4),
         pDmg = rand(4, 9);
@@ -661,8 +1048,9 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     }
 
     // DODGE
-    const dodgeChance = dS.speed / 350;
+    const dodgeChance = dS.speed / 280;
     if (Math.random() < dodgeChance) {
+      updateTurnLabel(aEl, "👊 ATTACKING");
       const moveName = pick(atkNames);
       banner(
         isA ? "a" : "b",
@@ -675,9 +1063,16 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `${atk.name} attempts <b>${moveName}</b>...`,
         isA ? "hit-a" : "hit-b",
       );
-      await delay(700);
-      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
       await delay(500);
+      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
+      await delay(350);
+      // Visual: attacker whiffs past, defender sidesteps
+      applyAnim(aEl, isA ? "atk-miss" : "atk-miss-left", 500);
+      applyAnim(dEl, isA ? "dodge-sidestep" : "dodge-sidestep-left", 500);
+      swapActiveTurn(aEl, dEl, "💨 DODGED");
+      const dc = getElCenter(dEl, arenaWrapper);
+      spawnTextParticle(particleContainer, dc.x, dc.y - 25, "MISS!", "#67e8f9");
+      spawnParticles(particleContainer, dc.x, dc.y, "#67e8f9", 6);
       banner(
         isA ? "b" : "a",
         `💨 ${pick(dodgeLines)} <b>[miss]</b>`,
@@ -705,13 +1100,18 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     let isCombo = curCombo >= 3;
     if (isCombo) dmg = Math.round(dmg * 1.4);
 
+    // Rage damage boost
+    const atkRage = isA ? rage1 : rage2;
+    if (atkRage > 0) dmg = Math.round(dmg * 1.5);
+
+    updateTurnLabel(aEl, "👊 ATTACKING");
     // Wind-up
     banner(
       isA ? "a" : "b",
       `👊 <b>${moveName}</b>...`,
       "attack",
     );
-    playSound(isCrit ? "criticalHit" : "normalHit");
+    playSound("windUp");
     addLog(
       battleLogBody,
       "👊",
@@ -719,9 +1119,10 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       isA ? "hit-a" : "hit-b",
     );
     applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
-    await delay(700);
+    await delay(500);
 
     // Impact
+    playSound(isCrit ? "criticalHit" : "normalHit");
     applyAnim(
       dEl,
       isCrit || isCombo ? "big-shake" : "shake",
@@ -750,6 +1151,48 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       triggerFlash(flashOverlay, isCrit ? "gold" : "red");
     }
 
+    // Shield absorption
+    let absorbed = 0;
+    const defShield = isA ? shield2 : shield1;
+    if (defShield > 0) {
+      absorbed = Math.min(defShield, dmg);
+      dmg -= absorbed;
+      if (isA) shield2 -= absorbed;
+      else shield1 -= absorbed;
+      if ((isA ? shield2 : shield1) <= 0) {
+        dEl.classList.remove("shielded");
+        applyAnim(dEl, "shield-break", 400);
+        setStatus(dEl, null);
+        banner(
+          isA ? "b" : "a",
+          `🛡️💥 Shield shattered! <b>[blocked ${absorbed}hp]</b>`,
+          "shield",
+        );
+        addLog(
+          battleLogBody,
+          "🛡️",
+          `${def.name}'s shield shattered! Blocked <b>${absorbed}</b> damage.`,
+          "shield",
+        );
+      } else {
+        banner(
+          isA ? "b" : "a",
+          `🛡️ Shield absorbed <b>[${absorbed}hp blocked]</b>`,
+          "shield",
+        );
+        addLog(
+          battleLogBody,
+          "🛡️",
+          `${def.name}'s shield absorbed <b>${absorbed}</b> damage! (${isA ? shield2 : shield1} HP left on shield)`,
+          "shield",
+        );
+      }
+      playSound((isA ? shield2 : shield1) <= 0 ? "shieldBreak" : "shieldBlock");
+      const sc = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, sc.x, sc.y, "#38bdf8", 8);
+      await delay(300);
+    }
+
     if (isA) {
       hp2 = Math.max(0, hp2 - dmg);
       updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
@@ -758,12 +1201,15 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
     }
 
-    await delay(500);
+    await delay(350);
+    const rageTag = atkRage > 0 ? " — ENRAGED!" : "";
     banner(
       "center",
       `💥 ${moveName} → ${def.name} <b>[-${dmg}hp]</b>` +
+        (absorbed > 0 ? ` (🛡️${absorbed})` : "") +
         (isCrit ? " — CRITICAL!" : "") +
-        (isCombo ? ` — COMBO x${curCombo}!` : ""),
+        (isCombo ? ` — COMBO x${curCombo}!` : "") +
+        rageTag,
       isCrit ? "special" : "attack",
     );
     if (isCrit || isCombo) startMajorEvent();
@@ -779,12 +1225,12 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       logCls,
     );
     if (isCrit) {
-      await delay(500);
+      await delay(350);
       addLog(battleLogBody, "💥", `<b>${pick(critLines)}</b>`, "critical");
     }
     if (isCombo) {
       playSound("combo");
-      await delay(500);
+      await delay(350);
       addLog(
         battleLogBody,
         "🌀",
@@ -800,13 +1246,49 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       );
     }
     if (isCrit || isCombo) {
-      await delay(400);
+      await delay(300);
       endMajorEvent();
     }
 
+    // REFLECT — bounce damage back to attacker
+    const defReflect = isA ? reflect2 : reflect1;
+    if (defReflect > 0 && dmg > 0) {
+      swapActiveTurn(aEl, dEl, "🪞 REFLECTING");
+      playSound("reflectBounce");
+      const reflDmg = Math.round(dmg * 0.35);
+      applyAnim(dEl, "reflect-flash", 500);
+      const rc2 = getElCenter(aEl, arenaWrapper);
+      spawnParticles(particleContainer, rc2.x, rc2.y, "#60a5fa", 10);
+      showPopup(aEl, "-" + reflDmg + " 🪞", "");
+      spawnTextParticle(particleContainer, rc2.x, rc2.y - 25, "REFLECTED!", "#93c5fd");
+      if (isA) {
+        hp1 = Math.max(0, hp1 - reflDmg);
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      } else {
+        hp2 = Math.max(0, hp2 - reflDmg);
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      }
+      banner(
+        isA ? "b" : "a",
+        `🪞 ${pick(reflectLines)} <b>[${reflDmg}hp reflected]</b>`,
+        "reflect",
+      );
+      addLog(
+        battleLogBody,
+        "🪞",
+        `${def.name} reflected <b>${reflDmg}</b> damage back!`,
+        "reflect",
+      );
+      await delay(350);
+      setActiveTurn(aEl, dEl);
+    }
+
     // COUNTER ATTACK
-    if (Math.random() < dS.luck / 300 && (isA ? hp2 : hp1) > 0) {
-      await delay(700);
+    if (Math.random() < dS.luck / 250 && (isA ? hp2 : hp1) > 0) {
+      await delay(400);
+      swapActiveTurn(aEl, dEl, "↩️ COUNTERING");
+      // Visual: defender parries
+      applyAnim(dEl, "counter-parry", 400);
       banner(
         isA ? "b" : "a",
         `↩️ Counter attack!`,
@@ -816,19 +1298,22 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       addLog(
         battleLogBody,
         "⚡",
-        `${def.name} rushes to strike back!`,
+        `${def.name} parries and strikes back!`,
         "counter",
       );
-      await delay(500);
+      await delay(350);
       const cDmg = rand(4, 10);
       applyAnim(dEl, isA ? "atk-l" : "atk-r", 350);
-      await delay(550);
-      applyAnim(aEl, "shake", 400);
+      await delay(350);
+      applyAnim(aEl, "big-shake", 500);
       applyAnim(aEl, "hit-flash", 300);
+      playSound("counterImpact");
       showPopup(aEl, "-" + cDmg + " ↩️", "");
+      spawnTextParticle(particleContainer, getElCenter(aEl, arenaWrapper).x, getElCenter(aEl, arenaWrapper).y - 25, "COUNTER!", "#fb923c");
       const ac = getElCenter(aEl, arenaWrapper);
-      spawnParticles(particleContainer, ac.x, ac.y, "#ff6600", 10);
+      spawnParticles(particleContainer, ac.x, ac.y, "#ff6600", 14);
       triggerFlash(flashOverlay, "red");
+      screenShake(mainContainer, false);
       if (isA) {
         hp1 = Math.max(0, hp1 - cDmg);
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
@@ -847,14 +1332,87 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
         `↩️ ${pick(counterLines)} <b>[-${cDmg}hp]</b>`,
         "counter",
       );
+      setActiveTurn(aEl, dEl);
     }
 
-    await delay(400);
+    // RAGE TRIGGER — defender enters rage when HP drops below 30%
+    const defHpNow = isA ? hp2 : hp1;
+    const defRageNow = isA ? rage2 : rage1;
+    if (defHpNow > 0 && defHpNow < 30 && defRageNow === 0 && Math.random() < 0.5) {
+      await delay(350);
+      if (isA) rage2 = 3;
+      else rage1 = 3;
+      playSound("rage");
+      applyAnim(dEl, "rage-aura", 700);
+      dEl.classList.add("enraged");
+      triggerFlash(flashOverlay, "red");
+      setStatus(dEl, "🔥");
+      const rc = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, rc.x, rc.y, "#ef4444", 16);
+      spawnTextParticle(particleContainer, rc.x, rc.y - 25, "RAGE!", "#ef4444");
+      banner(
+        isA ? "b" : "a",
+        `🔥 ${pick(rageLines)} <b>[+50% dmg, 3 turns]</b>`,
+        "rage",
+      );
+      addLog(
+        battleLogBody,
+        "🔥",
+        `<b>${def.name} ${pick(rageLines)}</b> Damage boosted for 3 turns!`,
+        "rage",
+      );
+      await delay(400);
+    }
+
+    // DOUBLE STRIKE — speed-based chance for a second hit
+    if (Math.random() < aS.speed / 400 && (isA ? hp2 : hp1) > 0) {
+      setActiveTurn(aEl, dEl, "⚡ DOUBLE STRIKE");
+      await delay(300);
+      const dsDmg = rand(4, 9) + Math.round(aS.speed / 15);
+      banner(
+        isA ? "a" : "b",
+        `⚡ ${pick(doubleStrikeLines)} <b>[-${dsDmg}hp]</b>`,
+        "doublestrike",
+      );
+      playSound("doubleStrike");
+      addLog(
+        battleLogBody,
+        "⚡",
+        `${atk.name} ${pick(doubleStrikeLines)} — extra <b>-${dsDmg} HP</b>!`,
+        isA ? "hit-a" : "hit-b",
+      );
+      applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
+      await delay(300);
+      applyAnim(dEl, "shake", 400);
+      applyAnim(dEl, "hit-flash", 300);
+      showPopup(dEl, "-" + dsDmg + " ⚡", "combo-pop");
+      const dsc = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, dsc.x, dsc.y, "#c084fc", 10);
+      spawnTextParticle(particleContainer, dsc.x, dsc.y - 25, "DOUBLE!", "#c084fc");
+      if (isA) {
+        hp2 = Math.max(0, hp2 - dsDmg);
+        updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      } else {
+        hp1 = Math.max(0, hp1 - dsDmg);
+        updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      }
+      await delay(300);
+    }
+
+    await delay(300);
     dEl.classList.remove("hit-flash", "shake", "big-shake");
 
     if (Math.random() < 0.3) {
-      await delay(300);
+      const crowdSounds = ["crowdCheer", "crowdWoo", "crowdClap", "crowdWoouu"];
+      playSound(pick(crowdSounds));
+      await delay(200);
       addLog(battleLogBody, "📢", pick(crowdLines), "crowd");
+    }
+    if ((isA ? hp2 : hp1) <= 20 && (isA ? hp2 : hp1) > 0) {
+      playSound("heartbeat");
+    }
+    if (isCrit && Math.random() < 0.4) {
+      playSound("painScream");
     }
 
     // Show HP status every few turns
@@ -862,15 +1420,13 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
       logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
     }
 
+    updateBuffBars();
     emit({
       event: "turn",
       turn: Math.ceil(turn / 2),
       hp1: Math.max(0, Math.round(hp1)),
       hp2: Math.max(0, Math.round(hp2)),
-      banner:
-        (bannerA?.textContent || "") +
-        (bannerCenter?.textContent ? " " + bannerCenter.textContent : "") +
-        (bannerB?.textContent ? " " + bannerB.textContent : ""),
+      banner: bannerStage?.textContent || "",
     });
     await delay(TURN_DELAY);
   }
@@ -904,11 +1460,18 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
     winnerHp: Math.max(0, Math.round(winner === f1 ? hp1 : hp2)),
   });
 
+  // Clean up persistent mechanic classes
+  fighterA.classList.remove("stunned", "shielded", "enraged", "burning");
+  fighterB.classList.remove("stunned", "shielded", "enraged", "burning");
+  if (buffsBarA) buffsBarA.innerHTML = "";
+  if (buffsBarB) buffsBarB.innerHTML = "";
+
   // Extended KO sequence with slow-mo feel
   clearActiveTurn(fighterA, fighterB);
   playSound("ko");
+  playSound("painDie");
   triggerFlash(flashOverlay, "white");
-  clearBanners(bannerA, bannerCenter, bannerB);
+  clearBanners(bannerStage);
   banner("center", `🔔 BATTLE OVER!`, "ko");
   startMajorEvent();
   addLog(battleLogBody, "🔔", `<b>═══════ BATTLE OVER! ═══════</b>`, "ko");
@@ -929,6 +1492,7 @@ export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
   screenShake(mainContainer, true);
   arenaWrapper.style.filter = "brightness(1)";
   playSound("victory");
+  playSound("victoryCheer");
   banner(
     "center",
     `🏆 ${getEmoji(winner.name)} ${winner.name} WINS! 🏆`,

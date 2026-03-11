@@ -35,9 +35,9 @@ function getWsUrl() {
 
 const SAMPLE_PEOPLE = [
   "Daniel",
-  "Noah",
-  "Shira",
-  "Gil",
+  "Noa",
+  "Aviv",
+  "Yoav",
   "Ido",
   "Maya",
   "Or",
@@ -54,7 +54,6 @@ function App() {
   const [isBusy, setIsBusy] = useState(false);
   const [champion, setChampion] = useState(null);
   const [showLog, setShowLog] = useState(false);
-  const [bannerMode, setBannerMode] = useState("sides"); // sides | center
 
   // QR mode state
   const [setupMode, setSetupMode] = useState("manual"); // manual | qr
@@ -95,9 +94,9 @@ function App() {
   const countdownOverlayRef = useRef(null);
   const countdownNumberRef = useRef(null);
   const countdownSubRef = useRef(null);
-  const bannerARef = useRef(null);
-  const bannerCenterRef = useRef(null);
-  const bannerBRef = useRef(null);
+  const bannerStageRef = useRef(null);
+  const buffsARef = useRef(null);
+  const buffsBRef = useRef(null);
   const flashRef = useRef(null);
   const vignetteRef = useRef(null);
 
@@ -124,9 +123,9 @@ function App() {
       countdownOverlay: countdownOverlayRef.current,
       countdownNumber: countdownNumberRef.current,
       countdownSub: countdownSubRef.current,
-      bannerA: bannerARef.current,
-      bannerCenter: bannerCenterRef.current,
-      bannerB: bannerBRef.current,
+      bannerStage: bannerStageRef.current,
+      buffsBarA: buffsARef.current,
+      buffsBarB: buffsBRef.current,
       flashOverlay: flashRef.current,
       vignetteOverlay: vignetteRef.current,
     }),
@@ -252,7 +251,7 @@ function App() {
       id: crypto.randomUUID(),
       name: manualAddName.trim(),
       emoji: getEmoji(manualAddName.trim()),
-      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5 },
+      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5, focus: 5, stamina: 5 },
       manual: true,
     };
     setLobbyPlayers((prev) => [...prev, p]);
@@ -327,7 +326,6 @@ function App() {
       currentPair[1],
       refs,
       broadcastEvent,
-      { centerMode: bannerMode === "center" },
     );
     result.winner.wins++;
     const newElim = new Set(eliminated);
@@ -354,7 +352,6 @@ function App() {
     allFighters,
     setupMatch,
     showChampionUI,
-    bannerMode,
   ]);
 
   fightFnRef.current = fightCurrentMatch;
@@ -710,6 +707,7 @@ function App() {
                   {currentPair[0].emoji || getEmoji(currentPair[0].name)}
                 </div>
                 <div className="fighter-name">{currentPair[0].name}</div>
+                <div className="fighter-buffs" ref={buffsARef} />
                 <div className="fighter-wins">Wins: {currentPair[0].wins}</div>
                 <div className="fighter-stats" ref={statsARef} />
               </div>
@@ -721,20 +719,14 @@ function App() {
                   {currentPair[1].emoji || getEmoji(currentPair[1].name)}
                 </div>
                 <div className="fighter-name">{currentPair[1].name}</div>
+                <div className="fighter-buffs" ref={buffsBRef} />
                 <div className="fighter-wins">Wins: {currentPair[1].wins}</div>
                 <div className="fighter-stats" ref={statsBRef} />
               </div>
             </div>
 
-            {/* Action Banners — 3 zones */}
-            <div className="banner-strip">
-              <div className="action-banner side-a-banner" ref={bannerARef} />
-              <div
-                className="action-banner center-banner"
-                ref={bannerCenterRef}
-              />
-              <div className="action-banner side-b-banner" ref={bannerBRef} />
-            </div>
+            {/* Action Banner Stage */}
+            <div className="banner-stage" ref={bannerStageRef} />
           </div>
 
           {/* Battle Log Ticker */}
@@ -765,15 +757,6 @@ function App() {
             </button>
             <button className="btn-ghost" onClick={startTournament}>
               Restart
-            </button>
-            <button
-              className={"btn-ghost" + (bannerMode === "center" ? " active" : "")}
-              onClick={() =>
-                setBannerMode((m) => (m === "sides" ? "center" : "sides"))
-              }
-              title="Toggle banner display mode"
-            >
-              {bannerMode === "sides" ? "Banners: Sides" : "Banners: Center"}
             </button>
           </div>
         </div>

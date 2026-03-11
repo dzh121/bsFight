@@ -53,7 +53,6 @@ export const atkNames = [
   "Reply All Barrage", // Ranged splash damage
   "Mandatory Meeting", // High-level Sleep spell
   "HR Violation", // Heavy penalty / Defense-lowering strike
-  "Out of Office", // Dodge / Invincibility frame
   "Passive Aggression", // Psychic damage that bypasses armor
 
   // --- IT & Hardware Support ---
@@ -160,9 +159,74 @@ export const buffLines = [
   "approved their own pull request!",
 ];
 
+export const stunLines = [
+  "sent a meeting invite for 4:59 PM Friday",
+  "forwarded a 47-email thread with 'thoughts?'",
+  "triggered mandatory compliance training",
+  "dropped a surprise org chart reshuffle",
+  "started a fire drill during lunch break",
+  "launched a surprise code review marathon",
+  "demanded a TPS report by EOD",
+  "assigned a 'quick 5-minute task' at 5:55 PM",
+];
+
+export const lifestealLines = [
+  "stole credit for the entire project",
+  "absorbed the team's energy at the standup",
+  "took the last coffee AND the credit",
+  "siphoned PTO from another department",
+  "presented someone else's slides to the VP",
+  "merged someone else's PR under their name",
+];
+
+export const shieldLines = [
+  "hid behind a corporate firewall",
+  "enabled Do Not Disturb mode",
+  "activated VPN and went invisible",
+  "put up an auto-reply force field",
+  "pulled up Terms & Conditions as defense",
+  "opened an umbrella of legal jargon",
+];
+
+export const rageLines = [
+  "entered CRUNCH MODE!",
+  "activated emergency caffeine protocol!",
+  "went full keyboard warrior!",
+  "snapped and flipped the standing desk!",
+  "rage-compiled with -O3 optimization!",
+  "went nuclear after reading the Slack thread!",
+];
+
+export const reflectLines = [
+  "turned it into a boomerang email!",
+  "hit Reply All with receipts!",
+  "redirected the ticket back to sender!",
+  "activated a reverse proxy!",
+  "filed a counter-complaint with HR!",
+  "bounced the PR review back!",
+];
+
+export const burnLines = [
+  "set the deadline on fire!",
+  "overclocked their CPU!",
+  "started a flame war in #general!",
+  "deployed without rollback!",
+  "lit the Jira board ablaze!",
+  "ignited a heated code review!",
+];
+
+export const doubleStrikeLines = [
+  "dual-wielding keyboards!",
+  "opened two terminals at once!",
+  "multi-threaded attack!",
+  "parallel processed that punch!",
+  "async/await combo!",
+  "forked the attack!",
+];
+
 export const MAX_HP = 100;
 export const MAX_NRG = 100;
-export const TURN_DELAY = 1800;
+export const TURN_DELAY = 1200;
 
 export function rand(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;
@@ -192,16 +256,16 @@ export function normalizeNames(t) {
 }
 
 export function generateBalancedStats() {
-  const budget = rand(310, 380);
+  const budget = rand(420, 510);
   let vals = [];
   let remaining = budget;
-  for (let i = 0; i < 5; i++) {
-    const maxV = Math.min(95, remaining - (5 - i) * 25);
-    const v = rand(25, Math.max(25, maxV));
+  for (let i = 0; i < 7; i++) {
+    const maxV = Math.min(95, remaining - (7 - i) * 20);
+    const v = rand(20, Math.max(20, maxV));
     vals.push(v);
     remaining -= v;
   }
-  vals.push(Math.max(25, Math.min(95, remaining)));
+  vals.push(Math.max(20, Math.min(95, remaining)));
   vals = shuffle(vals);
   return {
     power: vals[0],
@@ -210,6 +274,8 @@ export function generateBalancedStats() {
     chaos: vals[3],
     luck: vals[4],
     defense: vals[5],
+    focus: vals[6],
+    stamina: vals[7],
   };
 }
 

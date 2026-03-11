@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./styles/battle.css";
 
-const STAT_KEYS = ["power", "speed", "hype", "chaos", "luck", "defense"];
+const STAT_KEYS = ["power", "speed", "hype", "chaos", "luck", "defense", "focus", "stamina"];
 const STAT_LABELS = {
   power: "Power",
   speed: "Speed",
@@ -9,8 +9,24 @@ const STAT_LABELS = {
   chaos: "Chaos",
   luck: "Luck",
   defense: "Defense",
+  focus: "Focus",
+  stamina: "Stamina",
 };
-const TOTAL_BUDGET = 30;
+const STAT_DESCRIPTIONS = {
+  power: "Raw damage output. Higher power means your normal attacks and combos hit harder. Affects base damage on every strike.",
+  speed: "Determines dodge chance and enables Double Strike — a bonus second hit after your normal attack. Fast fighters are hard to pin down.",
+  hype: "Fuels Lifesteal (drain HP from enemies) and Buff triggers. High hype fighters power up more often and steal health when low.",
+  chaos: "Increases critical hit chance, Stun attacks, Poison, and Burn triggers. Chaotic fighters are unpredictable and dangerous.",
+  luck: "Boosts healing triggers when HP is low and powers Counter Attacks — striking back right after being hit.",
+  defense: "Reduces incoming damage and enables Shield (absorbs hits) and Reflect (bounces damage back). Tanky fighters last longer.",
+  focus: "Boosts energy gain each turn and increases Special Move trigger rate. Focused fighters unleash powerful specials more often.",
+  stamina: "Increases heal amount and Shield HP. High stamina fighters recover more and build stronger barriers.",
+};
+const STAT_ICONS = {
+  power: "💪", speed: "⚡", hype: "🔥", chaos: "🌀",
+  luck: "🎲", defense: "🛡", focus: "🎯", stamina: "🏋️",
+};
+const TOTAL_BUDGET = 40;
 const MIN_STAT = 1;
 const MAX_STAT = 10;
 const INITIAL_STATS = Object.fromEntries(STAT_KEYS.map((k) => [k, MIN_STAT]));
@@ -69,6 +85,7 @@ export default function JoinPage() {
   const [stats, setStats] = useState({ ...INITIAL_STATS });
   const [status, setStatus] = useState("idle"); // idle | connecting | joined | started | removed | champion
   const [confirmedPlayer, setConfirmedPlayer] = useState(null);
+  const [expandedStat, setExpandedStat] = useState(null);
   const wsRef = useRef(null);
 
   // Live fight state
@@ -399,29 +416,43 @@ export default function JoinPage() {
             </span>
           </label>
           {STAT_KEYS.map((k) => (
-            <div key={k} className="join-stat-row">
-              <span className="join-stat-label">{STAT_LABELS[k]}</span>
-              <button
-                className="join-stat-btn"
-                onClick={() => changeStat(k, -1)}
-                disabled={stats[k] <= MIN_STAT}
-              >
-                -
-              </button>
-              <div className="join-stat-bar-bg">
-                <div
-                  className={`stat-bar-fill ${k}`}
-                  style={{ width: `${stats[k] * 10}%` }}
-                />
+            <div key={k} className="join-stat-block">
+              <div className="join-stat-row">
+                <button
+                  className={`join-stat-info-btn${expandedStat === k ? " active" : ""}`}
+                  onClick={() => setExpandedStat(expandedStat === k ? null : k)}
+                  title={`What does ${STAT_LABELS[k]} do?`}
+                >
+                  {STAT_ICONS[k]}
+                </button>
+                <span className="join-stat-label">{STAT_LABELS[k]}</span>
+                <button
+                  className="join-stat-btn"
+                  onClick={() => changeStat(k, -1)}
+                  disabled={stats[k] <= MIN_STAT}
+                >
+                  -
+                </button>
+                <div className="join-stat-bar-bg">
+                  <div
+                    className={`stat-bar-fill ${k}`}
+                    style={{ width: `${stats[k] * 10}%` }}
+                  />
+                </div>
+                <span className="join-stat-val">{stats[k]}</span>
+                <button
+                  className="join-stat-btn"
+                  onClick={() => changeStat(k, 1)}
+                  disabled={stats[k] >= MAX_STAT || remaining <= 0}
+                >
+                  +
+                </button>
               </div>
-              <span className="join-stat-val">{stats[k]}</span>
-              <button
-                className="join-stat-btn"
-                onClick={() => changeStat(k, 1)}
-                disabled={stats[k] >= MAX_STAT || remaining <= 0}
-              >
-                +
-              </button>
+              {expandedStat === k && (
+                <div className="join-stat-desc">
+                  {STAT_DESCRIPTIONS[k]}
+                </div>
+              )}
             </div>
           ))}
         </div>
