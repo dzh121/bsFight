@@ -220,6 +220,102 @@ export const doubleStrikeLines = [
   "submitted duplicate high-priority Jira tickets",
 ];
 
+export const executeLines = [
+  "filed the termination paperwork!",
+  "pushed the emergency shutdown button!",
+  "triggered a complete system wipe!",
+  "sent the final performance review!",
+  "issued a career-ending memo!",
+  "dropped the ultimate sudo command!",
+];
+
+export const sabotageLines = [
+  "swapped the keyboard layout to Dvorak",
+  "changed all the passwords overnight",
+  "rerouted their emails to spam",
+  "renamed all their git branches",
+  "replaced their coffee with decaf",
+  "switched their monitor to 640x480",
+];
+
+export const momentumLines = [
+  "is on a roll!",
+  "can't be stopped!",
+  "is building unstoppable momentum!",
+  "is in the zone!",
+  "has entered beast mode!",
+  "is steamrolling through!",
+];
+
+export const intimidateLines = [
+  "gave them THE LOOK across the open office",
+  "cc'd their manager on a vague email",
+  "scheduled a 1-on-1 with no agenda",
+  "sent a calendar invite titled 'Quick Chat'",
+  "started typing in the DMs then stopped",
+  "left a sticky note that just says 'See me.'",
+];
+
+export const cleanseLines = [
+  "rebooted and came back fresh!",
+  "cleared the cache and cookies!",
+  "ran a full system diagnostic!",
+  "did a factory reset on the situation!",
+  "flushed the DNS and started clean!",
+  "uninstalled all the bloatware!",
+];
+
+export const siphonLines = [
+  "hacked into the enemy's power grid!",
+  "stole their coffee machine's electricity!",
+  "redirected their bandwidth!",
+  "drained their battery mid-presentation!",
+  "unplugged their charger under the desk!",
+];
+
+export const chainLightningLines = [
+  "sent a reply-all chain reaction!",
+  "triggered a cascading outage!",
+  "started a domino effect of tickets!",
+  "launched a rapid-fire Slack barrage!",
+  "hit them with a recursive loop!",
+];
+
+export const armorBreakLines = [
+  "found a zero-day in their firewall!",
+  "bypassed their security clearance!",
+  "shredded their NDA protection!",
+  "cracked their two-factor auth!",
+  "exposed their admin credentials!",
+];
+
+export const berserkerLines = [
+  "sacrificed their PTO for raw power!",
+  "worked through lunch for extra damage!",
+  "burned the midnight oil!",
+  "rage-coded through the pain!",
+  "traded sleep for a production hotfix!",
+];
+
+export const soulSwapLines = [
+  "swapped desks and stole their setup!",
+  "filed a role-reversal with HR!",
+  "pulled the old switcheroo!",
+  "traded positions in the org chart!",
+  "initiated a hostile desk takeover!",
+];
+
+export const crowdEventLines = [
+  { text: "☕ Coffee Machine Exploded!", effect: "healBoth", value: 5 },
+  { text: "📧 Reply-All Chaos!", effect: "chaosBoth", value: 5 },
+  { text: "🔌 Network Outage!", effect: "energyReset" },
+  { text: "📢 CEO Walked In!", effect: "nextDouble" },
+  { text: "🍕 Pizza Arrived!", effect: "healActive", value: 10 },
+  { text: "💡 Server Room Overheated!", effect: "burnBoth", value: 3 },
+  { text: "🎵 Hold Music Started!", effect: "stunRandom" },
+  { text: "📊 Quarterly Review Leaked!", effect: "debuffRandom" },
+];
+
 export const MAX_HP = 100;
 export const MAX_NRG = 100;
 export const TURN_DELAY = 1200;
@@ -252,11 +348,11 @@ export function normalizeNames(t) {
 }
 
 export function generateBalancedStats() {
-  const budget = rand(420, 510);
+  const budget = rand(570, 680);
   let vals = [];
   let remaining = budget;
-  for (let i = 0; i < 7; i++) {
-    const maxV = Math.min(95, remaining - (7 - i) * 20);
+  for (let i = 0; i < 10; i++) {
+    const maxV = Math.min(95, remaining - (10 - i) * 20);
     const v = rand(20, Math.max(20, maxV));
     vals.push(v);
     remaining -= v;
@@ -272,6 +368,9 @@ export function generateBalancedStats() {
     defense: vals[5],
     focus: vals[6],
     stamina: vals[7],
+    wit: vals[8],
+    grit: vals[9],
+    swagger: vals[10],
   };
 }
 

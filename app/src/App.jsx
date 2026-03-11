@@ -266,7 +266,7 @@ function App() {
       id: crypto.randomUUID(),
       name: manualAddName.trim(),
       emoji: getEmoji(manualAddName.trim()),
-      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5, focus: 5, stamina: 5 },
+      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5, focus: 5, stamina: 5, wit: 5, grit: 5, swagger: 5 },
       manual: true,
     };
     setLobbyPlayers((prev) => [...prev, p]);
@@ -377,22 +377,21 @@ function App() {
     setIsBusy(true);
     const s1 = currentPair[0].stats,
       s2 = currentPair[1].stats;
-    const t1 =
-      s1.power * 0.3 +
-      s1.speed * 0.2 +
-      s1.hype * 0.2 +
-      s1.chaos * 0.1 +
-      s1.luck * 0.1 +
-      s1.defense * 0.1 +
+    const scoreStats = (s) =>
+      s.power * 0.2 +
+      s.speed * 0.12 +
+      s.hype * 0.1 +
+      s.chaos * 0.08 +
+      s.luck * 0.1 +
+      s.defense * 0.1 +
+      s.focus * 0.08 +
+      s.stamina * 0.07 +
+      s.wit * 0.07 +
+      s.grit * 0.1 +
+      s.swagger * 0.05 +
       Math.random() * 25;
-    const t2 =
-      s2.power * 0.3 +
-      s2.speed * 0.2 +
-      s2.hype * 0.2 +
-      s2.chaos * 0.1 +
-      s2.luck * 0.1 +
-      s2.defense * 0.1 +
-      Math.random() * 25;
+    const t1 = scoreStats(s1);
+    const t2 = scoreStats(s2);
     const winner = t1 >= t2 ? currentPair[0] : currentPair[1];
     const loser = winner === currentPair[0] ? currentPair[1] : currentPair[0];
     winner.wins++;
@@ -740,12 +739,12 @@ function App() {
               </div>
             </div>
 
-            {/* Action Banner Stage */}
+            {/* Scrolling Battle Log Overlay */}
+            {showLog && <div className="log-overlay" ref={logBodyRef} />}
+
+            {/* Action Banner Stage — now at bottom */}
             <div className="banner-stage" ref={bannerStageRef} />
           </div>
-
-          {/* Battle Log Ticker */}
-          {showLog && <div className="log-ticker" ref={logBodyRef} />}
 
           {/* Battle Controls */}
           <div className="battle-controls">

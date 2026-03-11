@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./styles/battle.css";
 
-const STAT_KEYS = ["power", "speed", "hype", "chaos", "luck", "defense", "focus", "stamina"];
+const STAT_KEYS = ["power", "speed", "hype", "chaos", "luck", "defense", "focus", "stamina", "wit", "grit", "swagger"];
 const STAT_LABELS = {
   power: "Power",
   speed: "Speed",
@@ -11,22 +11,29 @@ const STAT_LABELS = {
   defense: "Defense",
   focus: "Focus",
   stamina: "Stamina",
+  wit: "Wit",
+  grit: "Grit",
+  swagger: "Swagger",
 };
 const STAT_DESCRIPTIONS = {
-  power: "Raw damage output. Higher power means your normal attacks and combos hit harder. Affects base damage on every strike.",
-  speed: "Determines dodge chance and enables Double Strike — a bonus second hit after your normal attack. Fast fighters are hard to pin down.",
-  hype: "Fuels Lifesteal (drain HP from enemies) and Buff triggers. High hype fighters power up more often and steal health when low.",
-  chaos: "Increases critical hit chance, Stun attacks, Poison, and Burn triggers. Chaotic fighters are unpredictable and dangerous.",
-  luck: "Boosts healing triggers when HP is low and powers Counter Attacks — striking back right after being hit.",
-  defense: "Reduces incoming damage and enables Shield (absorbs hits) and Reflect (bounces damage back). Tanky fighters last longer.",
-  focus: "Boosts energy gain each turn and increases Special Move trigger rate. Focused fighters unleash powerful specials more often.",
-  stamina: "Increases heal amount and Shield HP. High stamina fighters recover more and build stronger barriers.",
+  power: "Raw damage output. Affects base damage, special move power, and Execute finisher damage (synergizes with Grit).",
+  speed: "Dodge chance, Double Strike, and Momentum buildup. Fast fighters get a first-strike bonus in early turns and reduce burn damage.",
+  hype: "Fuels Buff triggers, Lifesteal, and Intimidate (with Swagger). High hype boosts rage damage and crowd reactions.",
+  chaos: "Critical hits, Stun attacks, and Burn. Boosts Sabotage amount (with Wit). Warning: high chaos has a backfire risk!",
+  luck: "Healing triggers, Counter Attacks, and Lucky Save (5% chance to survive a killing blow at 1 HP). Adds random bonus damage.",
+  defense: "Reduces all incoming damage. Enables Shield and Reflect. Also reduces poison/burn tick damage and resists Sabotage.",
+  focus: "Boosts energy gain and Special Move rate. Increases crit damage multiplier. At high focus, combo threshold drops to 2 hits.",
+  stamina: "Heal amount, Shield HP, and Cleanse trigger (with Wit). High stamina resists stun duration.",
+  wit: "Cleverness stat. Powers Counter damage, Sabotage, Poison (moved from Chaos), and Cleanse. Adds a small dodge bonus and extends debuffs.",
+  grit: "Resilience stat. Comeback damage when below 30% HP. Enables Execute (with Power), resists burn/poison, and boosts Momentum.",
+  swagger: "Intimidation stat. Triggers Intimidate (weakens enemy attacks), boosts Lifesteal, enables crowd favor buffs, and Morale Break.",
 };
 const STAT_ICONS = {
   power: "💪", speed: "⚡", hype: "🔥", chaos: "🌀",
   luck: "🎲", defense: "🛡", focus: "🎯", stamina: "🏋️",
+  wit: "🧠", grit: "💎", swagger: "😏",
 };
-const TOTAL_BUDGET = 40;
+const TOTAL_BUDGET = 55;
 const MIN_STAT = 1;
 const MAX_STAT = 10;
 const INITIAL_STATS = Object.fromEntries(STAT_KEYS.map((k) => [k, MIN_STAT]));
@@ -155,10 +162,16 @@ export default function JoinPage() {
                   hp2: d.hp2,
                   turn: d.turn,
                   banner: d.banner,
+                  bannerZone: d.bannerZone || "center",
+                  bannerType: d.bannerType || "",
+                  activeFighter: d.activeFighter || "",
                 }
               : prev,
           );
-          setActionLog((prev) => [d.banner, ...prev].slice(0, 8));
+          setActionLog((prev) => [
+            { text: d.banner, zone: d.bannerZone || "center", type: d.bannerType || "" },
+            ...prev,
+          ].slice(0, 8));
         }
         if (d.event === "matchEnd") {
           setMatch((prev) => {
@@ -172,7 +185,7 @@ export default function JoinPage() {
             };
           });
           setActionLog((prev) =>
-            [`🏆 ${d.winner.name} WINS!`, ...prev].slice(0, 8),
+            [{ text: `🏆 ${d.winner.name} WINS!`, zone: "center", type: "ko" }, ...prev].slice(0, 8),
           );
         }
       }
@@ -287,21 +300,29 @@ export default function JoinPage() {
                 </div>
               </div>
 
-              {/* Banner */}
+              {/* Banner with color & animation */}
               {match.banner && (
-                <div className="spec-banner">{match.banner}</div>
+                <div
+                  key={match.turn + match.banner}
+                  className={`spec-banner spec-zone-${match.bannerZone || "center"} spec-type-${match.bannerType || "attack"}`}
+                >
+                  {match.activeFighter && match.bannerZone !== "center" && (
+                    <span className="spec-banner-who">{match.activeFighter}</span>
+                  )}
+                  <span className="spec-banner-text">{match.banner}</span>
+                </div>
               )}
 
-              {/* Action log */}
+              {/* Action log with colored entries */}
               {actionLog.length > 0 && (
                 <div className="spec-log">
-                  {actionLog.map((line, i) => (
+                  {actionLog.map((entry, i) => (
                     <div
                       key={i}
-                      className="spec-log-line"
-                      style={{ opacity: 1 - i * 0.1 }}
+                      className={`spec-log-line spec-log-${entry.zone || "center"} spec-log-type-${entry.type || "attack"}`}
+                      style={{ opacity: 1 - i * 0.12 }}
                     >
-                      {line}
+                      {entry.text || entry}
                     </div>
                   ))}
                 </div>

@@ -724,6 +724,27 @@ button:disabled {
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
+/* HP-based fighter visual states */
+.fighter.hp-scuffed {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.fighter.hp-wounded {
+  border-color: rgba(251, 146, 60, 0.4);
+  animation: woundedIdle 2s ease-in-out infinite;
+}
+@keyframes woundedIdle {
+  0%, 100% { box-shadow: 0 0 30px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(251, 146, 60, 0.15); }
+}
+.fighter.hp-critical {
+  border-color: rgba(239, 68, 68, 0.5);
+  animation: criticalPulse 1s ease-in-out infinite;
+}
+@keyframes criticalPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.1); filter: brightness(1); }
+  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.25); filter: brightness(0.92); }
+}
+
 /* VS divider in arena */
 .arena-vs {
   font-family: var(--font-display);
@@ -734,20 +755,21 @@ button:disabled {
   letter-spacing: 3px;
 }
 
-/* ── Banner Stage (centered thrown-card system) ── */
+/* ── Banner Stage (bottom of arena) ── */
 .banner-stage {
   position: absolute;
-  bottom: 6%;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   z-index: 20;
   pointer-events: none;
-  width: 80%;
+  width: 90%;
   max-width: 95%;
+  padding-bottom: 10px;
 }
 
 /* ── Individual banner card ── */
@@ -1053,6 +1075,94 @@ button:disabled {
   100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 
+/* EXECUTE — devastating slam from above */
+.banner-card.action-execute {
+  border-color: rgba(220, 38, 38, 0.9);
+  color: #ff4444;
+  text-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(220, 38, 38, 0.4);
+  animation: bannerExecute 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+@keyframes bannerExecute {
+  0% { opacity: 0; transform: translateY(-50px) scale(1.5); filter: brightness(3) saturate(2); }
+  40% { opacity: 1; transform: translateY(5px) scale(0.95); filter: brightness(1.5); }
+  70% { transform: translateY(-2px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+/* SABOTAGE — glitchy distortion entrance */
+.banner-card.action-sabotage {
+  border-color: rgba(139, 92, 246, 0.7);
+  color: #a78bfa;
+  text-shadow: 0 0 16px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(139, 92, 246, 0.3);
+  animation: bannerGlitch 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+@keyframes bannerGlitch {
+  0% { opacity: 0; transform: skewX(20deg) translateX(-30px); filter: hue-rotate(90deg); }
+  30% { opacity: 0.8; transform: skewX(-10deg) translateX(10px); filter: hue-rotate(-45deg); }
+  60% { opacity: 1; transform: skewX(5deg) translateX(-3px); filter: hue-rotate(15deg); }
+  100% { opacity: 1; transform: skewX(0) translateX(0); filter: hue-rotate(0); }
+}
+
+/* MOMENTUM — fast streak entrance */
+.banner-card.action-momentum {
+  border-color: rgba(34, 197, 94, 0.7);
+  color: #4ade80;
+  text-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(34, 197, 94, 0.25);
+  animation: bannerStreak 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+@keyframes bannerStreak {
+  0% { opacity: 0; transform: translateX(-80px) scaleX(1.5); }
+  50% { opacity: 1; transform: translateX(6px) scaleX(0.95); }
+  100% { opacity: 1; transform: translateX(0) scaleX(1); }
+}
+
+/* INTIMIDATE — heavy pressure drop */
+.banner-card.action-intimidate {
+  border-color: rgba(236, 72, 153, 0.7);
+  color: #f472b6;
+  text-shadow: 0 0 16px rgba(236, 72, 153, 0.6);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(236, 72, 153, 0.3);
+  animation: bannerPressure 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+@keyframes bannerPressure {
+  0% { opacity: 0; transform: scale(1.8) translateY(-10px); filter: brightness(0.3); }
+  50% { opacity: 1; transform: scale(0.95) translateY(2px); filter: brightness(1.3); }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+}
+
+/* CLEANSE — purifying wash */
+.banner-card.action-cleanse {
+  border-color: rgba(56, 189, 248, 0.7);
+  color: #7dd3fc;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.25);
+  animation: bannerWash 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+@keyframes bannerWash {
+  0% { opacity: 0; transform: scaleY(0.3) translateY(20px); filter: brightness(2) saturate(0); }
+  50% { opacity: 1; transform: scaleY(1.05) translateY(-3px); filter: brightness(1.2) saturate(1.5); }
+  100% { opacity: 1; transform: scaleY(1) translateY(0); filter: brightness(1) saturate(1); }
+}
+
+/* CROWD EVENT — dramatic center announcement */
+.banner-card.action-crowdevent {
+  border-color: rgba(250, 204, 21, 0.8);
+  color: #fde047;
+  text-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(250, 204, 21, 0.3);
+  animation: bannerEvent 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  font-size: 1.1rem;
+}
+@keyframes bannerEvent {
+  0% { opacity: 0; transform: scale(0) rotate(10deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(-3deg); }
+  75% { transform: scale(0.97) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
 /* KO — epic slam with glow pulse */
 .banner-card.action-ko {
   border-color: rgba(255, 215, 0, 0.9);
@@ -1137,32 +1247,57 @@ button:disabled {
   opacity: 1;
 }
 
-/* ── Battle Log Ticker (bottom overlay) ── */
-.log-ticker {
-  background: rgba(0, 0, 0, 0.75);
-  border-top: 1px solid var(--border);
-  padding: 10px 20px;
-  max-height: 155px;
-  overflow-y: auto;
-  backdrop-filter: blur(10px);
+/* ── Log Overlay (scrolls up inside arena) ── */
+.log-overlay {
+  position: absolute;
+  left: 10px;
+  bottom: 60px;
+  width: 320px;
+  max-height: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 20;
+  overflow: hidden;
+  padding: 4px 0;
 }
 .log-entry {
-  padding: 3px 0;
-  animation: logIn 0.3s;
+  padding: 2px 6px;
+  animation: logSlideIn 0.3s ease-out;
   display: flex;
-  gap: 8px;
+  gap: 5px;
   align-items: flex-start;
-  font-size: 0.88rem;
-  line-height: 1.6;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  word-break: break-word;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  margin-bottom: 2px;
+  backdrop-filter: blur(4px);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
-@keyframes logIn {
+@keyframes logSlideIn {
   0% {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(12px);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+.log-entry.log-fade-out {
+  animation: logFadeOut 0.6s ease-in forwards;
+}
+@keyframes logFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px);
   }
 }
 .log-entry.critical {
@@ -1300,6 +1435,15 @@ button:disabled {
 }
 .stat-bar-fill.stamina {
   background: linear-gradient(90deg, #f97316, #fb923c);
+}
+.stat-bar-fill.wit {
+  background: linear-gradient(90deg, #8b5cf6, #c084fc);
+}
+.stat-bar-fill.grit {
+  background: linear-gradient(90deg, #64748b, #94a3b8);
+}
+.stat-bar-fill.swagger {
+  background: linear-gradient(90deg, #ec4899, #f472b6);
 }
 
 /* ── Fighter Animations ── */
@@ -2597,19 +2741,75 @@ button:disabled {
   color: var(--gold);
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
 }
+/* ── Spec Banner — zone + type coloring ── */
 .spec-banner {
   text-align: center;
   font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--cyan);
   padding: 8px 12px;
-  background: rgba(0, 240, 255, 0.06);
-  border: 1px solid rgba(0, 240, 255, 0.15);
   border-radius: 8px;
   letter-spacing: 1px;
-  animation: phaseIn 0.3s ease;
+  animation: specBannerPop 0.35s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
+.spec-banner-who {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+.spec-banner-text {
+  font-size: 0.8rem;
+}
+@keyframes specBannerPop {
+  0% { opacity: 0; transform: scale(0.85) translateY(6px); }
+  60% { opacity: 1; transform: scale(1.04) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+/* Zone colors — fighter A (cyan), fighter B (magenta), center (gold) */
+.spec-banner.spec-zone-a {
+  color: var(--cyan);
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-left: 3px solid var(--cyan);
+}
+.spec-banner.spec-zone-b {
+  color: var(--magenta);
+  background: rgba(255, 0, 229, 0.08);
+  border: 1px solid rgba(255, 0, 229, 0.25);
+  border-left: 3px solid var(--magenta);
+}
+.spec-banner.spec-zone-center {
+  color: var(--gold);
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+/* Type accents */
+.spec-banner.spec-type-heal { color: var(--neon-green); background: rgba(57, 255, 20, 0.08); border-color: rgba(57, 255, 20, 0.25); }
+.spec-banner.spec-type-special { color: var(--gold); background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); animation: specBannerPop 0.35s ease-out, specGlow 1.2s ease infinite; }
+.spec-banner.spec-type-ko { color: var(--gold); background: rgba(255, 215, 0, 0.12); border-color: var(--gold); font-size: 0.95rem; animation: specBannerPop 0.35s ease-out, specGlow 0.8s ease infinite; }
+.spec-banner.spec-type-stun { color: #fbbf24; background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.25); }
+.spec-banner.spec-type-poison { color: #c084fc; background: rgba(192, 132, 252, 0.08); border-color: rgba(192, 132, 252, 0.25); }
+.spec-banner.spec-type-burn { color: #fb923c; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.25); }
+.spec-banner.spec-type-rage { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+.spec-banner.spec-type-lifesteal { color: #dc2626; background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.25); }
+.spec-banner.spec-type-shield { color: #38bdf8; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25); }
+.spec-banner.spec-type-dodge { color: #67e8f9; background: rgba(103, 232, 249, 0.06); border-color: rgba(103, 232, 249, 0.2); }
+.spec-banner.spec-type-crowdevent { color: var(--gold); background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); animation: specBannerPop 0.35s ease-out, specPulse 0.6s ease 2; }
+@keyframes specGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.1); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.3); }
+}
+@keyframes specPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* ── Spec Log ── */
 .spec-log {
   display: flex;
   flex-direction: column;
@@ -2625,15 +2825,46 @@ button:disabled {
   font-family: var(--font-body);
   font-size: 0.7rem;
   color: var(--muted);
-  padding: 2px 0;
+  padding: 2px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  animation: phaseIn 0.2s ease;
+  animation: specLogSlide 0.25s ease-out;
+  border-radius: 3px;
+}
+@keyframes specLogSlide {
+  0% { opacity: 0; transform: translateX(-8px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+/* Log zone colors */
+.spec-log-line.spec-log-a { color: var(--cyan); border-left: 2px solid var(--cyan); padding-left: 6px; }
+.spec-log-line.spec-log-b { color: var(--magenta); border-left: 2px solid var(--magenta); padding-left: 6px; }
+.spec-log-line.spec-log-center { color: var(--gold); }
+/* Log type highlights */
+.spec-log-line.spec-log-type-heal { color: var(--neon-green); }
+.spec-log-line.spec-log-type-special { color: var(--gold); font-weight: 600; }
+.spec-log-line.spec-log-type-ko { color: var(--gold); font-weight: 800; }
+.spec-log-line.spec-log-type-stun { color: #fbbf24; }
+.spec-log-line.spec-log-type-rage { color: #ef4444; }
+.spec-log-line.spec-log-type-poison { color: #c084fc; }
+.spec-log-line.spec-log-type-burn { color: #fb923c; }
+
+@media (max-width: 900px) {
+  .log-overlay {
+    width: 240px;
+  }
+  .log-entry {
+    font-size: 0.6rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .log-overlay {
+    width: 180px;
+    bottom: 50px;
+    left: 4px;
+  }
   .join-emoji-grid {
     grid-template-columns: repeat(6, 1fr);
   }
