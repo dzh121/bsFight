@@ -158,70 +158,66 @@ export const buffLines = [
   "got a shoutout in the all-hands meeting",
   "approved their own pull request!",
 ];
-
 export const stunLines = [
-  "sent a meeting invite for 4:59 PM Friday",
   "forwarded a 47-email thread with 'thoughts?'",
   "triggered mandatory compliance training",
   "dropped a surprise org chart reshuffle",
-  "started a fire drill during lunch break",
   "launched a surprise code review marathon",
-  "demanded a TPS report by EOD",
   "assigned a 'quick 5-minute task' at 5:55 PM",
 ];
 
 export const lifestealLines = [
   "stole credit for the entire project",
-  "absorbed the team's energy at the standup",
-  "took the last coffee AND the credit",
+  "absorbed the team's energy at the daily standup",
+  "drank the last coffee without making a new pot",
   "siphoned PTO from another department",
   "presented someone else's slides to the VP",
-  "merged someone else's PR under their name",
+  "merged someone else's PR under their own name",
 ];
 
 export const shieldLines = [
   "hid behind a corporate firewall",
   "enabled Do Not Disturb mode",
   "activated VPN and went invisible",
-  "put up an auto-reply force field",
-  "pulled up Terms & Conditions as defense",
-  "opened an umbrella of legal jargon",
+  "turned on a vacation auto-responder",
+  "cited company policy section 4.B",
+  "cc'd the legal department for defense",
 ];
 
 export const rageLines = [
   "entered CRUNCH MODE!",
-  "activated emergency caffeine protocol!",
-  "went full keyboard warrior!",
+  "activated emergency caffeine protocol",
+  "went full keyboard warrior",
   "snapped and flipped the standing desk!",
-  "rage-compiled with -O3 optimization!",
-  "went nuclear after reading the Slack thread!",
+  "rage-compiled with -O3 optimization",
+  "went nuclear after reading the Slack thread",
 ];
 
 export const reflectLines = [
-  "turned it into a boomerang email!",
-  "hit Reply All with receipts!",
-  "redirected the ticket back to sender!",
-  "activated a reverse proxy!",
-  "filed a counter-complaint with HR!",
-  "bounced the PR review back!",
+  "bounced the ticket back to the sender",
+  "hit Reply All with the chat receipts!",
+  "activated a reverse proxy",
+  "pointed to the official documentation",
+  "filed a counter-complaint with HR",
+  "kicked the PR review back with 50 comments",
 ];
 
 export const burnLines = [
-  "set the deadline on fire!",
-  "overclocked their CPU!",
-  "started a flame war in #general!",
-  "deployed without rollback!",
-  "lit the Jira board ablaze!",
-  "ignited a heated code review!",
+  "pushed the deadline up by two weeks",
+  "started a flame war in #general",
+  "deployed to production on a Friday!",
+  "added 15 new sub-tasks to the current sprint",
+  "left the server room door propped open",
+  "ignited a heated architecture debate",
 ];
 
 export const doubleStrikeLines = [
-  "dual-wielding keyboards!",
-  "opened two terminals at once!",
+  "dual-wielding mechanical keyboards",
+  "opened two terminal windows at once",
+  "scheduled two meetings for the exact same time",
   "multi-threaded attack!",
-  "parallel processed that punch!",
-  "async/await combo!",
-  "forked the attack!",
+  "hit them with the async/await combo",
+  "submitted duplicate high-priority Jira tickets",
 ];
 
 export const MAX_HP = 100;
