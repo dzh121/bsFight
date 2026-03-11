@@ -38,104 +38,126 @@ export const emojiMap = {
 };
 
 export const atkNames = [
-  "Desk Throw",
-  "Keyboard Smash",
-  "Chair Spin",
-  "Coffee Splash",
-  "Stapler Strike",
-  "Monitor Drop",
-  "Mouse Fling",
-  "Cable Whip",
-  "Notebook Slam",
-  "Tablet Toss",
-  "Email Barrage",
-  "Stealth Move",
-  "Manager Punch",
-  "Deadline Kick",
-  "Bug Storm",
-  "Zoom Attack",
-  "Slack Slap",
-  "WiFi Sparks",
-  "Meeting Wave",
-  "PR Strike",
-  "Super Commit",
-  "Task Tornado",
-  "Caffeine Burst",
-  "JIRA Launch",
-  "Deadline Surge",
-  "Deploy Smash",
-  "Git Conflict",
-  "Code Review Hit",
-  "Production Blast",
-  "Standup Attack",
+  // --- The Developer Trenches ---
+  "Merge Conflict", // Heavy melee clash
+  "Stack Overflow", // Overwhelming multi-hit combo
+  "Infinite Loop", // Stun or trap move
+  "Drop Table", // Massive Area of Effect (AOE) destruction
+  "Force Push", // Knockback attack
+  "Memory Leak", // Damage over time (Poison effect)
+  "Detached HEAD", // Critical hit / Execution move
+  "Syntax Strike", // Quick, basic jab
+  "Silent Failure", // Stealth / Assassin attack
+
+  // --- The Corporate Battlefield ---
+  "Reply All Barrage", // Ranged splash damage
+  "Mandatory Meeting", // High-level Sleep spell
+  "HR Violation", // Heavy penalty / Defense-lowering strike
+  "Out of Office", // Dodge / Invincibility frame
+  "Passive Aggression", // Psychic damage that bypasses armor
+
+  // --- IT & Hardware Support ---
+  "Ticket Escalation", // Summons a heavier hit / boss attack
+  "Password Reset", // Confusion effect (enemy forgets their next move)
+  "Hard Reboot", // Self-heal or massive reset attack
+  "Toner Explosion", // Blind / Ink AOE attack
+  "Network Outage", // Silence effect (enemy can't use special moves)
+  "Phishing Hook", // Grapple / Pull move to bring enemies close
+  "Blue Screen", // Instant Death / Paralyze
+  "Cable Trip", // Physical trip / Knockdown
+  "Read-Only Shield", // Defensive block / Invulnerability
+  "Cache Clear", // Dispels all buffs from the enemy
+  "Paper Jam", // Roots the enemy in place
 ];
 
 export const specialNames = [
-  "⭐ Super Special Strike",
-  "⭐ Final Move",
-  "⭐ Ultimate Attack",
-  "⭐ Ultimate Tech Strike",
-  "⭐ Open Space Assault",
-  "⭐ Corporate Fate Blow",
+  "⭐ Thursday Afternoon Deploy", // Guaranteed chaos and massive unpredictable damage
+  "⭐ C-Suite Escalation", // Summons the highest level executives for a devastating strike
+  "⭐ Two Weeks Notice", // The absolute finisher / Unblockable exit move
+  "⭐ Company Restructure", // A total board-wipe that hits every enemy on screen
+  "⭐ Sudo rm -rf /", // The ultimate command-line erasure (instant deletion)
+  "⭐ Drop Production DB", // The most feared, catastrophic database destruction
+  "⭐ System-Wide Ransomware", // Ultimate lockdown that freezes all enemies and drains their health
+  "⭐ Stock dropped by 40%", // The ultimate corporate chaos
 ];
 
 export const critLines = [
-  "CRITICAL HIT!!!",
-  "DEVASTATING BLOW!",
-  "Double Damage!",
-  "Crushing Strike!",
-  "Slammed the Laptop Shut!",
-  "BOOM!",
+  "PUSHED DIRECTLY TO MAIN!", // The ultimate risky developer move
+  "CC'd THE CEO!", // Maximum corporate damage multiplier
+  "BYPASSED QA!", // Skips all defense and goes straight to damage
+  "ROOT ACCESS GRANTED!", // A massive critical strike for IT
+  "WORKS ON MY MACHINE!", // The classic, undeniable dev defense/attack
+  "APPROVED BY FINANCE!", // The rarest and most powerful corporate hit
+  "LGTM! (Looks Good To Me!)", // The instant code review fatality
+  "REPLIED ALL!", // Maximum collateral damage
+  "COFFEE KICKED IN!", // A sudden burst of critical energy
+  "SEV 1 INCIDENT TRIGGERED!", // A critical hit so hard it wakes up the on-call team
 ];
 
 export const dodgeLines = [
-  "dodged at the last second!",
-  "ran to the meeting room!",
-  "quick move — avoided!",
-  "DODGE!",
-  "slipped through the door!",
-  "hid behind the monitor!",
+  "Auto-Reply: Out of Office", // The ultimate corporate invincibility frame
+  "404 Not Found!", // The classic tech miss
+  "Closed as 'Won't Fix'!", // Completely ignored the attack
+  "Moved to Backlog", // Dodged it for now... but it might come back later
+  "Left on Read", // Emotionally devastating, but physically a miss
+  "Declined Calendar Invite", // Stepping out of the AOE zone
+  "Ignored by .gitignore", // The attack was filtered out completely
+  "Marked as Spam", // Threw the attack right in the junk folder
+  "Forgot to Unmute", // The attack happened, but nobody heard it
+  "Connection Timed Out", // Slipped away due to bad Wi-Fi
+  "Firewall Blocked", // A clean, technical deflection
+  "Working from Home Today", // Wasn't even in the office to take the hit
 ];
 
 export const crowdLines = [
-  "🔥 The office is going wild!",
-  "👀 Everyone's on the edge of their seats!",
-  "📢 Shouting from the open space!",
-  "🍿 Unbearable tension!",
-  "😱 Unbelievable!",
-  "💥 What a round!",
-  "🎺 Everyone's coming from the kitchen!",
-  "🤯 Insane!",
-  "📣 Everyone's on their feet!",
-  "🥁 Pounding on the desks!",
-  "😤 Peak tension!",
-  "🎆 What a show!",
+  "🔥 The #general Slack channel is exploding",
+  "👀 The whole floor stopped pretending to work",
+  "📢 IT is watching the network traffic spike",
+  "🍿 The QA team is grabbing popcorn",
+  "😱 HR just opened a new incident file",
+  "💥 Even the remote workers unmuted for this",
+  "☕ The espresso machine has been completely abandoned",
+  "🤯 Nobody has looked at a Jira ticket in 10 minutes",
+  "📣 The micromanagers are stunned speechless",
+  "🥁 Mechanical keyboards are clacking aggressively",
+  "😤 The server cooling fans are working overtime",
+  "🎆 This is going straight into the quarterly review",
 ];
 
 export const healLines = [
-  "grabbed a coffee!",
-  "took a smoke break!",
-  "recharged!",
-  "absorbed energy from the kitchen!",
+  "found leftover donuts in the breakroom.",
+  "took a strategic PTO day",
+  "closed 50 open browser tabs",
+  "grabbed a fresh cold brew!",
+  "reverted to a stable build.",
+  "stepped away from the keyboard for five minutes",
 ];
 
 export const poisonLines = [
-  "sent a passive-aggressive email!",
-  "CC'd the manager!",
-  "tagged @all in Slack!",
+  "scheduled a recurring 8 AM meeting.",
+  "introduced a subtle memory leak...",
+  "sent a passive-aggressive 'per my last email'",
+  "tagged @channel on a Thursday afternoon",
+  "assigned a vague Jira ticket",
+  "left dirty dishes in the sink.",
 ];
 
 export const counterLines = [
-  "Counter Attack!",
-  "fired a Reply All!",
-  "Boomerang Email!",
+  "blamed it on a third-party API!",
+  "deflected to legacy code",
+  "pulled up the chat receipts...",
+  "replied with 'Let's take this offline.'",
+  "hit them with a Boomerang email",
+  "suddenly remembered a blocking dependency!",
 ];
 
 export const buffLines = [
-  "got promoted!",
-  "on fire!",
-  "coffee power-up!",
-  "corporate fighting spirit!",
+  "put on noise-canceling headphones.",
+  "chugged a triple espresso!",
+  "unlocked full admin privileges",
+  "entered deep focus mode...",
+  "got a shoutout in the all-hands meeting",
+  "approved their own pull request!",
 ];
 
 export const MAX_HP = 100;
