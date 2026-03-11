@@ -370,6 +370,15 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     lastBannerZone = zone;
     lastBannerType = type;
     setBannerZone(bannerStage, zone, text, type);
+    // Emit real-time action to phone spectators on every banner
+    emit({
+      event: "action",
+      banner: text.replace(/<[^>]*>/g, ""),
+      bannerZone: zone,
+      bannerType: type,
+      hp1: Math.max(0, Math.round(hp1)),
+      hp2: Math.max(0, Math.round(hp2)),
+    });
   }
 
   // Helper: dramatic pause for major events (crit, special, KO)
@@ -1455,6 +1464,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if (isA) nextDouble1 = false; else nextDouble2 = false;
     }
 
+    // Cap single-hit damage at 60% MAX_HP to prevent freak one-shots
+    dmg = Math.min(dmg, Math.round(MAX_HP * 0.6));
+
     updateTurnLabel(aEl, "👊 ATTACKING");
     // Wind-up
     banner(
@@ -1892,8 +1904,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   vsText.classList.remove("fire");
   arenaWrapper.classList.remove("intense");
 
-  // Determine winner
+  // Determine winner & whether it was a KO or time-out decision
   let winner, loser, wEl, lEl;
+  const isKO = hp1 <= 0 || hp2 <= 0;
   if (hp1 <= 0) {
     winner = f2;
     loser = f1;
@@ -1924,42 +1937,56 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   if (buffsBarA) buffsBarA.innerHTML = "";
   if (buffsBarB) buffsBarB.innerHTML = "";
 
-  // Extended KO sequence with slow-mo feel
   clearActiveTurn(fighterA, fighterB);
-  playSound("ko");
-  playSound("painDie");
-  triggerFlash(flashOverlay, "white");
-  clearBanners(bannerStage);
-  banner("center", `🔔 BATTLE OVER!`, "ko");
-  startMajorEvent();
-  addLog(battleLogBody, "🔔", `<b>═══════ BATTLE OVER! ═══════</b>`, "ko");
-  await delay(600);
-  // Slow-mo KO: darken arena, spin loser
-  arenaWrapper.style.transition = "filter 0.5s";
-  arenaWrapper.style.filter = "brightness(0.4)";
-  await delay(500);
-  applyAnim(lEl, "ko-spin", 800);
-  addLog(
-    battleLogBody,
-    "💀",
-    `<b>${loser.name}</b> goes down! It's over...`,
-    "ko",
-  );
-  await delay(1000);
-  triggerFlash(flashOverlay, "gold");
-  screenShake(mainContainer, true);
-  arenaWrapper.style.filter = "brightness(1)";
+
+  if (isKO) {
+    // ── Full KO sequence with slow-mo feel ──
+    playSound("ko");
+    playSound("painDie");
+    triggerFlash(flashOverlay, "white");
+    clearBanners(bannerStage);
+    banner("center", `🔔 BATTLE OVER!`, "ko");
+    startMajorEvent();
+    addLog(battleLogBody, "🔔", `<b>═══════ BATTLE OVER! ═══════</b>`, "ko");
+    await delay(600);
+    arenaWrapper.style.transition = "filter 0.5s";
+    arenaWrapper.style.filter = "brightness(0.4)";
+    await delay(500);
+    applyAnim(lEl, "ko-spin", 800);
+    addLog(battleLogBody, "💀", `<b>${loser.name}</b> goes down! It's over...`, "ko");
+    await delay(1000);
+    triggerFlash(flashOverlay, "gold");
+    screenShake(mainContainer, true);
+    arenaWrapper.style.filter = "brightness(1)";
+  } else {
+    // ── Time-out decision — no death, just a verdict ──
+    clearBanners(bannerStage);
+    banner("center", `⏱️ TIME'S UP!`, "crowdevent");
+    startMajorEvent();
+    addLog(battleLogBody, "⏱️", `<b>TIME'S UP!</b> Going to decision...`, "crowd");
+    await delay(1000);
+    const wHp = Math.round(winner === f1 ? hp1 : hp2);
+    const lHp = Math.round(loser === f1 ? hp1 : hp2);
+    addLog(battleLogBody, "📊", `${winner.name} ${wHp} HP vs ${loser.name} ${lHp} HP`, "crowd");
+    await delay(800);
+    triggerFlash(flashOverlay, "gold");
+  }
+
   playSound("victory");
   playSound("victoryCheer");
   banner(
     "center",
-    `🏆 ${getEmoji(winner.name)} ${winner.name} WINS! 🏆`,
+    isKO
+      ? `🏆 ${getEmoji(winner.name)} ${winner.name} WINS! 🏆`
+      : `🏆 ${getEmoji(winner.name)} ${winner.name} WINS BY DECISION! 🏆`,
     "ko",
   );
   addLog(
     battleLogBody,
     "🏆",
-    `<b>${winner.name}</b> defeats <b>${loser.name}</b>! ${getEmoji(winner.name)}`,
+    isKO
+      ? `<b>${winner.name}</b> defeats <b>${loser.name}</b>! ${getEmoji(winner.name)}`
+      : `<b>${winner.name}</b> wins by decision over <b>${loser.name}</b>! ${getEmoji(winner.name)}`,
     "ko",
   );
   const wc = getElCenter(wEl, arenaWrapper);

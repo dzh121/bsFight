@@ -68,7 +68,7 @@ function gameWsPlugin() {
           if (msg.type === "gameStarted") {
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
-                c.send(JSON.stringify({ type: "gameStarted" }));
+                c.send(JSON.stringify({ type: "gameStarted", fighters: msg.fighters }));
               }
             });
           }

@@ -289,9 +289,12 @@ function App() {
           emoji: p.emoji,
         })),
       );
-      // Notify players game started
+      // Notify players game started (include fighter list for betting)
       if (hostWsRef.current && hostWsRef.current.readyState === 1) {
-        hostWsRef.current.send(JSON.stringify({ type: "gameStarted" }));
+        hostWsRef.current.send(JSON.stringify({
+          type: "gameStarted",
+          fighters: built.map((f) => ({ name: f.name, emoji: f.emoji })),
+        }));
       }
     } else {
       const names = normalizeNames(input);
@@ -351,6 +354,16 @@ function App() {
     r.matchIdx += 2;
     r.totalPlayed++;
 
+    // Broadcast elimination with survivors list for phone betting
+    const survivors = allFighters
+      .filter((f) => !newElim.has(f.name))
+      .map((f) => ({ name: f.name, emoji: f.emoji, wins: f.wins }));
+    broadcastEvent({
+      event: "elimination",
+      loser: { name: result.loser.name, emoji: result.loser.emoji },
+      survivors,
+    });
+
     // Batch all state updates together to avoid intermediate re-render
     // that would reset fighter className and cause flicker
     setEliminated(newElim);
@@ -397,6 +410,29 @@ function App() {
     winner.wins++;
     const newElim = new Set(eliminated);
     newElim.add(loser.name);
+
+    // Broadcast skip result to phones
+    const broadcastEvent = (data) => {
+      const ws = hostWsRef.current;
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: "fightEvent", data }));
+      }
+    };
+    broadcastEvent({
+      event: "matchEnd",
+      winner: { name: winner.name, emoji: winner.emoji },
+      loser: { name: loser.name, emoji: loser.emoji },
+      winnerHp: MAX_HP,
+    });
+    const survivors = allFighters
+      .filter((f) => !newElim.has(f.name))
+      .map((f) => ({ name: f.name, emoji: f.emoji, wins: f.wins }));
+    broadcastEvent({
+      event: "elimination",
+      loser: { name: loser.name, emoji: loser.emoji },
+      survivors,
+    });
+
     setEliminated(newElim);
 
     const refs = getRefs();

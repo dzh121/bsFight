@@ -100,6 +100,15 @@ export default function JoinPage() {
   const [actionLog, setActionLog] = useState([]);
   const [championData, setChampionData] = useState(null);
 
+  // Betting state
+  const [survivors, setSurvivors] = useState([]);
+  const [amEliminated, setAmEliminated] = useState(false);
+  const [bet, setBet] = useState(null);         // { name, emoji }
+  const [betWins, setBetWins] = useState(0);
+  const [betLocked, setBetLocked] = useState(false);
+  const bannerKeyRef = useRef(0);
+  const betRef = useRef(null);
+
   const usedPoints = Object.values(stats).reduce((a, b) => a + b, 0);
   const remaining = TOTAL_BUDGET - usedPoints;
 
@@ -136,7 +145,14 @@ export default function JoinPage() {
         setConfirmedPlayer(msg.player);
         setStatus("joined");
       }
-      if (msg.type === "gameStarted") setStatus("started");
+      if (msg.type === "gameStarted") {
+        setStatus("started");
+        setAmEliminated(false);
+        setBet(null);
+        setBetWins(0);
+        setBetLocked(false);
+        if (msg.fighters) setSurvivors(msg.fighters);
+      }
       if (msg.type === "removed") setStatus("removed");
       if (msg.type === "roomReset") setStatus("removed");
       if (msg.type === "fightEvent") {
@@ -153,25 +169,34 @@ export default function JoinPage() {
           });
           setActionLog([]);
         }
-        if (d.event === "turn") {
+        if (d.event === "action") {
+          bannerKeyRef.current++;
           setMatch((prev) =>
             prev
               ? {
                   ...prev,
                   hp1: d.hp1,
                   hp2: d.hp2,
-                  turn: d.turn,
                   banner: d.banner,
                   bannerZone: d.bannerZone || "center",
                   bannerType: d.bannerType || "",
-                  activeFighter: d.activeFighter || "",
+                  bannerKey: bannerKeyRef.current,
                 }
               : prev,
           );
-          setActionLog((prev) => [
-            { text: d.banner, zone: d.bannerZone || "center", type: d.bannerType || "" },
-            ...prev,
-          ].slice(0, 8));
+          if (d.banner) {
+            setActionLog((prev) => [
+              { text: d.banner, zone: d.bannerZone || "center", type: d.bannerType || "" },
+              ...prev,
+            ].slice(0, 10));
+          }
+        }
+        if (d.event === "turn") {
+          setMatch((prev) =>
+            prev
+              ? { ...prev, hp1: d.hp1, hp2: d.hp2, turn: d.turn }
+              : prev,
+          );
         }
         if (d.event === "matchEnd") {
           setMatch((prev) => {
@@ -185,8 +210,21 @@ export default function JoinPage() {
             };
           });
           setActionLog((prev) =>
-            [{ text: `🏆 ${d.winner.name} WINS!`, zone: "center", type: "ko" }, ...prev].slice(0, 8),
+            [{ text: `🏆 ${d.winner.name} WINS!`, zone: "center", type: "ko" }, ...prev].slice(0, 10),
           );
+          // Track own elimination
+          if (d.loser.name === myName) {
+            setAmEliminated(true);
+          }
+          // Track bet wins via ref (avoids stale closure)
+          const currentBet = betRef.current;
+          if (currentBet) {
+            if (d.winner.name === currentBet.name) setBetWins((w) => w + 1);
+            if (d.loser.name === currentBet.name) setBetLocked(true);
+          }
+        }
+        if (d.event === "elimination") {
+          setSurvivors(d.survivors || []);
         }
       }
       if (msg.type === "tournamentEnd") {
@@ -238,6 +276,17 @@ export default function JoinPage() {
               ? `After ${championData.totalPlayed} battles, you stand victorious!`
               : `${championData.champion.name} won after ${championData.totalPlayed} battles.`}
           </p>
+          {bet && (
+            <div className="spec-bet-result">
+              <div className="spec-bet-badge">🎰 YOUR BET</div>
+              <div className="spec-bet-target">{bet.emoji} {bet.name}</div>
+              <div className="spec-bet-wins">
+                {bet.name === championData.champion.name
+                  ? `🏆 WINNER! ${betWins} wins`
+                  : `${betWins} win${betWins !== 1 ? "s" : ""} before elimination`}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -303,12 +352,9 @@ export default function JoinPage() {
               {/* Banner with color & animation */}
               {match.banner && (
                 <div
-                  key={match.turn + match.banner}
+                  key={match.bannerKey || 0}
                   className={`spec-banner spec-zone-${match.bannerZone || "center"} spec-type-${match.bannerType || "attack"}`}
                 >
-                  {match.activeFighter && match.bannerZone !== "center" && (
-                    <span className="spec-banner-who">{match.activeFighter}</span>
-                  )}
                   <span className="spec-banner-text">{match.banner}</span>
                 </div>
               )}
@@ -328,6 +374,41 @@ export default function JoinPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Betting UI for eliminated players */}
+          {amEliminated && !bet && !betLocked && survivors.length > 0 && (
+            <div className="spec-bet-panel">
+              <div className="spec-bet-title">YOU'RE OUT! BET ON A FIGHTER</div>
+              <div className="spec-bet-grid">
+                {survivors
+                  .filter((s) => s.name !== myName)
+                  .map((s) => (
+                    <button
+                      key={s.name}
+                      className="spec-bet-btn"
+                      onClick={() => { const b = { name: s.name, emoji: s.emoji }; setBet(b); betRef.current = b; setBetWins(0); }}
+                    >
+                      <span className="spec-bet-emoji">{s.emoji || "🧑‍💼"}</span>
+                      <span className="spec-bet-name">{s.name}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+          {bet && !betLocked && (
+            <div className="spec-bet-active">
+              <span className="spec-bet-badge">🎰 BETTING ON</span>
+              <span className="spec-bet-target">{bet.emoji} {bet.name}</span>
+              <span className="spec-bet-wins">{betWins} win{betWins !== 1 ? "s" : ""}</span>
+            </div>
+          )}
+          {bet && betLocked && (
+            <div className="spec-bet-locked">
+              <span className="spec-bet-badge">💀 BET OVER</span>
+              <span className="spec-bet-target">{bet.emoji} {bet.name} was eliminated</span>
+              <span className="spec-bet-wins">Final: {betWins} win{betWins !== 1 ? "s" : ""}</span>
+            </div>
           )}
         </div>
       </div>

@@ -2624,18 +2624,20 @@ button:disabled {
 .spec-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 14px;
   width: 100%;
-  max-width: 440px;
+  max-width: 100%;
   backdrop-filter: blur(12px);
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   animation: phaseIn 0.4s ease;
   position: relative;
   overflow: hidden;
+  flex: 1;
+  max-height: 100vh;
 }
 .spec-your-fight {
   position: absolute;
@@ -2813,25 +2815,28 @@ button:disabled {
 .spec-log {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px;
+  gap: 5px;
+  padding: 8px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
   border: 1px solid var(--border);
-  max-height: 160px;
-  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .spec-log-line {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
   color: var(--muted);
-  padding: 2px 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: normal;
+  word-break: break-word;
   animation: specLogSlide 0.25s ease-out;
-  border-radius: 3px;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 @keyframes specLogSlide {
   0% { opacity: 0; transform: translateX(-8px); }
@@ -2849,6 +2854,114 @@ button:disabled {
 .spec-log-line.spec-log-type-rage { color: #ef4444; }
 .spec-log-line.spec-log-type-poison { color: #c084fc; }
 .spec-log-line.spec-log-type-burn { color: #fb923c; }
+
+/* ── Betting UI ── */
+.spec-bet-panel {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  animation: specBannerPop 0.4s ease-out;
+}
+.spec-bet-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--gold);
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+.spec-bet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+.spec-bet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+}
+.spec-bet-btn:hover {
+  border-color: var(--gold);
+  background: rgba(255, 215, 0, 0.08);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+  transform: scale(1.05);
+}
+.spec-bet-btn:active {
+  transform: scale(0.97);
+}
+.spec-bet-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+.spec-bet-name {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: center;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spec-bet-active,
+.spec-bet-locked,
+.spec-bet-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  animation: specBannerPop 0.35s ease-out;
+}
+.spec-bet-active {
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  color: var(--cyan);
+}
+.spec-bet-locked {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+.spec-bet-result {
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  color: var(--gold);
+  margin-top: 14px;
+  text-align: center;
+}
+.spec-bet-badge {
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.spec-bet-target {
+  font-size: 0.85rem;
+  flex: 1;
+}
+.spec-bet-wins {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
 
 @media (max-width: 900px) {
   .log-overlay {
@@ -2873,9 +2986,60 @@ button:disabled {
     gap: 4px;
   }
   .spec-emoji {
-    font-size: 2rem;
+    font-size: 1.6rem;
   }
   .spec-fighter {
-    padding: 8px 6px;
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  .spec-name {
+    font-size: 0.6rem;
+  }
+  .spec-banner {
+    font-size: 0.7rem;
+    padding: 6px 8px;
+  }
+  .spec-banner-text {
+    font-size: 0.7rem;
+  }
+  .spec-log-line {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+  }
+  .spec-bet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 6px;
+  }
+  .spec-bet-emoji {
+    font-size: 1.4rem;
+  }
+}
+
+/* ── Spectator full-screen layout ── */
+.join-page:has(.spec-card) {
+  padding: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+}
+/* PC/tablet: constrain width for readability */
+@media (min-width: 768px) {
+  .join-page:has(.spec-card) {
+    padding: 16px;
+  }
+  .spec-card {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 16px;
+  }
+  .spec-fighters {
+    gap: 16px;
+  }
+  .spec-log-line {
+    font-size: 0.85rem;
+  }
+  .spec-banner {
+    font-size: 0.9rem;
+    padding: 10px 16px;
   }
 }
