@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import "./styles/battle.css";
 import {
   normalizeNames,
@@ -18,6 +19,19 @@ import {
   updateNrgBar,
 } from "./utils/battleEngine";
 import { playSound } from "./utils/soundEngine";
+
+function scaleStats(qrStats) {
+  const scaled = {};
+  for (const k of Object.keys(qrStats)) {
+    scaled[k] = Math.round(qrStats[k] * 9 + 10);
+  }
+  return scaled;
+}
+
+function getWsUrl() {
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${location.host}/game-ws`;
+}
 
 const SAMPLE_PEOPLE = [
   "Daniel",
@@ -40,6 +54,12 @@ function App() {
   const [isBusy, setIsBusy] = useState(false);
   const [champion, setChampion] = useState(null);
   const [showLog, setShowLog] = useState(false);
+
+  // QR mode state
+  const [setupMode, setSetupMode] = useState("manual"); // manual | qr
+  const [lobbyPlayers, setLobbyPlayers] = useState([]);
+  const [manualAddName, setManualAddName] = useState("");
+  const hostWsRef = useRef(null);
 
   const roundRef = useRef({
     current: [],
@@ -164,18 +184,103 @@ function App() {
       setPhase("done");
       spawnConfetti();
       playSound("championCrown");
+      const ws = hostWsRef.current;
+      if (ws && ws.readyState === 1) {
+        ws.send(
+          JSON.stringify({
+            type: "tournamentEnd",
+            data: {
+              champion: { name: champ.name, emoji: champ.emoji },
+              totalPlayed,
+            },
+          }),
+        );
+      }
     },
     [stopAutoRun],
   );
 
+  // ── WebSocket connection for QR mode ──
+  // Keep alive for entire session (setup + battle + done) so fight events broadcast
+  useEffect(() => {
+    if (setupMode !== "qr") return;
+    const ws = new WebSocket(getWsUrl());
+    hostWsRef.current = ws;
+    ws.onopen = () => ws.send(JSON.stringify({ type: "registerHost" }));
+    ws.onmessage = (e) => {
+      let msg;
+      try {
+        msg = JSON.parse(e.data);
+      } catch {
+        return;
+      }
+      if (msg.type === "playerJoined") {
+        setLobbyPlayers((prev) => [...prev, msg.player]);
+      }
+      if (msg.type === "playerLeft") {
+        setLobbyPlayers((prev) => prev.filter((p) => p.id !== msg.player.id));
+      }
+      if (msg.type === "playerList") {
+        setLobbyPlayers(msg.players);
+      }
+    };
+    return () => {
+      ws.close();
+      hostWsRef.current = null;
+    };
+  }, [setupMode]);
+
+  const removeLobbyPlayer = useCallback((playerId) => {
+    setLobbyPlayers((prev) => prev.filter((p) => p.id !== playerId));
+    if (hostWsRef.current && hostWsRef.current.readyState === 1) {
+      hostWsRef.current.send(
+        JSON.stringify({ type: "removePlayer", playerId }),
+      );
+    }
+  }, []);
+
+  const addManualPlayer = useCallback(() => {
+    if (!manualAddName.trim()) return;
+    const p = {
+      id: crypto.randomUUID(),
+      name: manualAddName.trim(),
+      emoji: getEmoji(manualAddName.trim()),
+      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5 },
+      manual: true,
+    };
+    setLobbyPlayers((prev) => [...prev, p]);
+    setManualAddName("");
+  }, [manualAddName]);
+
   const startTournament = useCallback(() => {
-    const names = normalizeNames(input);
-    if (names.length < 2) {
-      alert("You need at least 2 names to start a tournament.");
-      return;
+    let built;
+    if (setupMode === "qr") {
+      const all = [...lobbyPlayers];
+      if (all.length < 2) {
+        alert("You need at least 2 players to start a tournament.");
+        return;
+      }
+      built = shuffle(
+        all.map((p) => ({
+          name: p.name,
+          wins: 0,
+          stats: scaleStats(p.stats),
+          emoji: p.emoji,
+        })),
+      );
+      // Notify players game started
+      if (hostWsRef.current && hostWsRef.current.readyState === 1) {
+        hostWsRef.current.send(JSON.stringify({ type: "gameStarted" }));
+      }
+    } else {
+      const names = normalizeNames(input);
+      if (names.length < 2) {
+        alert("You need at least 2 names to start a tournament.");
+        return;
+      }
+      built = buildFighterObjects(names);
     }
     stopAutoRun();
-    const built = buildFighterObjects(names);
     setAllFighters(built);
     setEliminated(new Set());
     setChampion(null);
@@ -195,7 +300,7 @@ function App() {
       const result = setupMatch(built, new Set(), r);
       if (result.done) showChampionUI(result.champion, built, r.totalPlayed);
     }, 100);
-  }, [input, stopAutoRun, setupMatch, showChampionUI]);
+  }, [input, setupMode, lobbyPlayers, stopAutoRun, setupMatch, showChampionUI]);
 
   const fightCurrentMatch = useCallback(async () => {
     if (!currentPair || isBusy || phase === "done") return;
@@ -204,20 +309,31 @@ function App() {
     // Wait for React to render the log DOM before reading refs
     await new Promise((res) => setTimeout(res, 60));
     const refs = getRefs();
-    const result = await animatedFight(currentPair[0], currentPair[1], refs);
+    const broadcastEvent = (data) => {
+      const ws = hostWsRef.current;
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: "fightEvent", data }));
+      }
+    };
+    const result = await animatedFight(
+      currentPair[0],
+      currentPair[1],
+      refs,
+      broadcastEvent,
+    );
     result.winner.wins++;
     const newElim = new Set(eliminated);
     newElim.add(result.loser.name);
-    setEliminated(newElim);
 
     const r = roundRef.current;
     r.next.push(result.winner);
     r.matchIdx += 2;
     r.totalPlayed++;
 
+    // Batch all state updates together to avoid intermediate re-render
+    // that would reset fighter className and cause flicker
+    setEliminated(newElim);
     setIsBusy(false);
-    await new Promise((res) => setTimeout(res, 700));
-
     const matchResult = setupMatch(allFighters, newElim, r);
     if (matchResult.done)
       showChampionUI(matchResult.champion, allFighters, r.totalPlayed);
@@ -346,38 +462,141 @@ function App() {
         <div className="setup-page phase-enter">
           <h1 className="setup-title">Office Battle Royale</h1>
           <p className="setup-subtitle">
-            Enter your coworkers' names below. Each fighter gets random stats.
-            Battles include attacks, combos, special moves, healing, poison &
-            more.
+            Set up your tournament. Choose QR mode for custom fighters or manual
+            mode for quick start.
           </p>
-          <div className="setup-card">
-            <label>Fighter Names</label>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={"Daniel\nNoah\nShira\nGil\nIdo"}
-            />
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                flexWrap: "wrap",
-                marginTop: 16,
-              }}
+
+          {/* Mode toggle */}
+          <div className="setup-mode-toggle">
+            <button
+              className={`setup-mode-btn${setupMode === "manual" ? " active" : ""}`}
+              onClick={() => setSetupMode("manual")}
             >
-              <button className="btn-cyber" onClick={startTournament}>
-                ⚔ Enter Arena
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setInput(SAMPLE_PEOPLE.join("\n"))}
-              >
-                Load Example
-              </button>
-              <button className="btn-danger" onClick={() => setInput("")}>
-                Clear
-              </button>
-            </div>
+              Manual Entry
+            </button>
+            <button
+              className={`setup-mode-btn${setupMode === "qr" ? " active" : ""}`}
+              onClick={() => setSetupMode("qr")}
+            >
+              QR Code Join
+            </button>
+          </div>
+
+          <div className="setup-card">
+            {setupMode === "manual" ? (
+              <>
+                <label>Fighter Names</label>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={"Daniel\nNoah\nShira\nGil\nIdo"}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    marginTop: 16,
+                  }}
+                >
+                  <button className="btn-cyber" onClick={startTournament}>
+                    ⚔ Enter Arena
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    onClick={() => setInput(SAMPLE_PEOPLE.join("\n"))}
+                  >
+                    Load Example
+                  </button>
+                  <button className="btn-danger" onClick={() => setInput("")}>
+                    Clear
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* QR Code */}
+                <div className="qr-section">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/join`}
+                    size={180}
+                    bgColor="#ffffff"
+                    fgColor="#0a0a12"
+                    level="M"
+                  />
+                  <div className="qr-url">{window.location.origin}/join</div>
+                </div>
+
+                {/* Player Lobby */}
+                <div className="player-lobby">
+                  <div className="player-lobby-title">
+                    <span>Players Joined</span>
+                    <span className="player-lobby-count">
+                      {lobbyPlayers.length}
+                    </span>
+                  </div>
+                  {lobbyPlayers.length === 0 ? (
+                    <div className="lobby-empty">
+                      Waiting for players to scan the QR code...
+                    </div>
+                  ) : (
+                    lobbyPlayers.map((p) => (
+                      <div key={p.id} className="lobby-player">
+                        <span className="lobby-player-emoji">{p.emoji}</span>
+                        <span className="lobby-player-name">{p.name}</span>
+                        <button
+                          className="lobby-player-remove"
+                          onClick={() => removeLobbyPlayer(p.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Manual add in QR mode */}
+                <div className="manual-add-form">
+                  <label className="join-label">Add Player Manually</label>
+                  <div className="manual-add-row">
+                    <input
+                      type="text"
+                      placeholder="Player name..."
+                      value={manualAddName}
+                      onChange={(e) => setManualAddName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addManualPlayer()}
+                    />
+                    <button className="btn-cyber" onClick={addManualPlayer}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    marginTop: 8,
+                  }}
+                >
+                  <button
+                    className="btn-cyber"
+                    onClick={startTournament}
+                    disabled={lobbyPlayers.length < 2}
+                  >
+                    ⚔ Start Tournament ({lobbyPlayers.length} players)
+                  </button>
+                  <button
+                    className="btn-danger"
+                    onClick={() => setLobbyPlayers([])}
+                    disabled={lobbyPlayers.length === 0}
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -399,7 +618,9 @@ function App() {
           <div className="hud-bar">
             {/* Fighter A HUD */}
             <div className="hud-fighter">
-              <div className="hud-avatar">{getEmoji(currentPair[0].name)}</div>
+              <div className="hud-avatar">
+                {currentPair[0].emoji || getEmoji(currentPair[0].name)}
+              </div>
               <div className="hud-bars">
                 <div className="hud-name">{currentPair[0].name}</div>
                 <div className="hp-bar-outer">
@@ -434,7 +655,9 @@ function App() {
 
             {/* Fighter B HUD */}
             <div className="hud-fighter right">
-              <div className="hud-avatar">{getEmoji(currentPair[1].name)}</div>
+              <div className="hud-avatar">
+                {currentPair[1].emoji || getEmoji(currentPair[1].name)}
+              </div>
               <div className="hud-bars">
                 <div className="hud-name">{currentPair[1].name}</div>
                 <div className="hp-bar-outer">
@@ -474,7 +697,7 @@ function App() {
             <div className="arena-fighters">
               <div className="fighter side-a" ref={fighterARef}>
                 <div className="fighter-emoji">
-                  {getEmoji(currentPair[0].name)}
+                  {currentPair[0].emoji || getEmoji(currentPair[0].name)}
                 </div>
                 <div className="fighter-name">{currentPair[0].name}</div>
                 <div className="fighter-wins">Wins: {currentPair[0].wins}</div>
@@ -485,7 +708,7 @@ function App() {
 
               <div className="fighter side-b" ref={fighterBRef}>
                 <div className="fighter-emoji">
-                  {getEmoji(currentPair[1].name)}
+                  {currentPair[1].emoji || getEmoji(currentPair[1].name)}
                 </div>
                 <div className="fighter-name">{currentPair[1].name}</div>
                 <div className="fighter-wins">Wins: {currentPair[1].wins}</div>
@@ -534,7 +757,9 @@ function App() {
       {phase === "done" && champion && (
         <div className="champion-screen phase-enter">
           <div className="champion-label">Office Champion</div>
-          <div className="champion-emoji">{getEmoji(champion.name)}</div>
+          <div className="champion-emoji">
+            {champion.emoji || getEmoji(champion.name)}
+          </div>
           <div className="champion-name">{champion.name}</div>
           <p className="champion-subtitle">
             After {roundRef.current.totalPlayed} battles, {champion.name} stands
@@ -554,7 +779,7 @@ function App() {
                     {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "▪"}
                   </span>
                   <span>
-                    {getEmoji(f.name)} {f.name}
+                    {f.emoji || getEmoji(f.name)} {f.name}
                   </span>
                 </span>
                 <span className="lb-wins">{f.wins}W</span>

@@ -210,7 +210,8 @@ function logHpStatus(bodyEl, f1Name, hp1, f2Name, hp2) {
   );
 }
 
-export async function animatedFight(f1, f2, refs) {
+export async function animatedFight(f1, f2, refs, onEvent) {
+  const emit = onEvent || (() => {});
   const {
     fighterA,
     fighterB,
@@ -295,6 +296,13 @@ export async function animatedFight(f1, f2, refs) {
     f2.name,
   );
   vsText.classList.add("fire");
+  emit({
+    event: "matchStart",
+    f1: { name: f1.name, emoji: f1.emoji },
+    f2: { name: f2.name, emoji: f2.emoji },
+    hp1: MAX_HP,
+    hp2: MAX_HP,
+  });
 
   while (hp1 > 0 && hp2 > 0 && turn < maxTurns * 2) {
     turn++;
@@ -753,6 +761,13 @@ export async function animatedFight(f1, f2, refs) {
       logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
     }
 
+    emit({
+      event: "turn",
+      turn: Math.ceil(turn / 2),
+      hp1: Math.max(0, Math.round(hp1)),
+      hp2: Math.max(0, Math.round(hp2)),
+      banner: actionBanner.textContent,
+    });
     await delay(TURN_DELAY);
   }
 
@@ -777,6 +792,13 @@ export async function animatedFight(f1, f2, refs) {
     wEl = winner === f1 ? fighterA : fighterB;
     lEl = winner === f1 ? fighterB : fighterA;
   }
+
+  emit({
+    event: "matchEnd",
+    winner: { name: winner.name, emoji: winner.emoji },
+    loser: { name: loser.name, emoji: loser.emoji },
+    winnerHp: Math.max(0, Math.round(winner === f1 ? hp1 : hp2)),
+  });
 
   // Extended KO sequence with slow-mo feel
   clearActiveTurn(fighterA, fighterB);
@@ -829,10 +851,8 @@ export async function animatedFight(f1, f2, refs) {
 
   wEl.classList.add("winner-glow");
   lEl.classList.add("loser-fade");
-  await delay(2200);
-  // Cleanup — React will re-render with new fighter data
-  wEl.classList.remove("winner-glow");
-  lEl.classList.remove("ko-spin", "loser-fade");
+  await delay(2500);
+  // Leave animation classes on — setupMatch will reset className via refs
   setStatus(fighterA, null);
   setStatus(fighterB, null);
   arenaWrapper.style.filter = "";
