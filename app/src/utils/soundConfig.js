@@ -18,29 +18,29 @@ const soundConfig = {
 
   events: {
     // Battle flow
-    battleStart:   { src: "/sounds/battle-start.mp3", volume: 0.8 },
-    countdown:     { src: "/sounds/countdown.mp3", volume: 0.7 },
-    turnStart:     { src: "/sounds/turn-start.mp3", volume: 0.3 },
+    battleStart:   { src: "/sounds/Dmmm.mp3", volume: 0.8 },
+    countdown:     { src: "/sounds/Tick Tock.mp3", volume: 0.7 },
+    turnStart:     { src: "/sounds/whopuuuuf.mp3", volume: 0.3 },
 
     // Attacks
-    normalHit:     { src: "/sounds/hit.mp3" },
-    criticalHit:   { src: "/sounds/critical.mp3", volume: 0.9 },
-    specialMove:   { src: "/sounds/special.mp3", volume: 0.9 },
-    combo:         { src: "/sounds/combo.mp3", volume: 0.8 },
+    normalHit:     { src: "/sounds/punch.mp3" },
+    criticalHit:   { src: "/sounds/BOOMMMM.mp3", volume: 0.9 },
+    specialMove:   { src: "/sounds/Grrrtr.mp3", volume: 0.9 },
+    combo:         { src: "/sounds/Wuhddsh.mp3", volume: 0.8 },
 
     // Defense
-    dodge:         { src: "/sounds/dodge.mp3" },
-    counter:       { src: "/sounds/counter.mp3", volume: 0.7 },
+    dodge:         { src: "/sounds/WHoosh.mp3" },
+    counter:       { src: "/sounds/SWSFF.mp3", volume: 0.7 },
 
     // Status
-    heal:          { src: "/sounds/heal.mp3" },
-    poison:        { src: "/sounds/poison.mp3" },
-    buff:          { src: "/sounds/buff.mp3" },
+    heal:          { src: "/sounds/wiIIP.mp3" },
+    poison:        { src: "/sounds/WuWuWuWu.mp3" },
+    buff:          { src: "/sounds/wiIIP.mp3" },
 
     // Outcome
-    ko:            { src: "/sounds/ko.mp3", volume: 1.0 },
-    victory:       { src: "/sounds/victory.mp3", volume: 0.9 },
-    championCrown: { src: "/sounds/champion.mp3", volume: 1.0 },
+    ko:            { src: "/sounds/punch wuch.mp3", volume: 1.0 },
+    victory:       { src: "/sounds/Tinnn.mp3", volume: 0.9 },
+    championCrown: { src: "/sounds/TOONTunTunTOON.mp3", volume: 1.0 },
   },
 };
 
