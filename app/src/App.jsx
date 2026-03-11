@@ -54,6 +54,7 @@ function App() {
   const [isBusy, setIsBusy] = useState(false);
   const [champion, setChampion] = useState(null);
   const [showLog, setShowLog] = useState(false);
+  const [bannerMode, setBannerMode] = useState("sides"); // sides | center
 
   // QR mode state
   const [setupMode, setSetupMode] = useState("manual"); // manual | qr
@@ -98,6 +99,7 @@ function App() {
   const bannerCenterRef = useRef(null);
   const bannerBRef = useRef(null);
   const flashRef = useRef(null);
+  const vignetteRef = useRef(null);
 
   const getRefs = useCallback(
     () => ({
@@ -126,6 +128,7 @@ function App() {
       bannerCenter: bannerCenterRef.current,
       bannerB: bannerBRef.current,
       flashOverlay: flashRef.current,
+      vignetteOverlay: vignetteRef.current,
     }),
     [],
   );
@@ -324,6 +327,7 @@ function App() {
       currentPair[1],
       refs,
       broadcastEvent,
+      { centerMode: bannerMode === "center" },
     );
     result.winner.wins++;
     const newElim = new Set(eliminated);
@@ -350,6 +354,7 @@ function App() {
     allFighters,
     setupMatch,
     showChampionUI,
+    bannerMode,
   ]);
 
   fightFnRef.current = fightCurrentMatch;
@@ -430,7 +435,7 @@ function App() {
       if (fightFnRef.current) {
         await fightFnRef.current();
         if (phaseRef.current !== "done") {
-          autoRunRef.current = setTimeout(step, 400);
+          autoRunRef.current = setTimeout(step, 800);
         }
       }
     }
@@ -690,6 +695,7 @@ function App() {
             <div className="arena-bg" />
             <div className="arena-floor" />
             <div className="particle-container" ref={particleRef} />
+            <div className="major-event-vignette" ref={vignetteRef} />
             <div className="countdown-overlay" ref={countdownOverlayRef}>
               <div className="countdown-number" ref={countdownNumberRef}>
                 3
@@ -759,6 +765,15 @@ function App() {
             </button>
             <button className="btn-ghost" onClick={startTournament}>
               Restart
+            </button>
+            <button
+              className={"btn-ghost" + (bannerMode === "center" ? " active" : "")}
+              onClick={() =>
+                setBannerMode((m) => (m === "sides" ? "center" : "sides"))
+              }
+              title="Toggle banner display mode"
+            >
+              {bannerMode === "sides" ? "Banners: Sides" : "Banners: Center"}
             </button>
           </div>
         </div>

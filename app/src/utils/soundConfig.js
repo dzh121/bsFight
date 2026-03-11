@@ -20,7 +20,7 @@ const soundConfig = {
     // Battle flow
     battleStart: { src: "/sounds/Dmmm.mp3", volume: 0.8 },
     countdown: { src: "/sounds/Tick Tock.mp3", volume: 0.7 },
-    turnStart: { src: "/sounds/whopuuuuf.mp3", volume: 0.3 },
+    turnStart: { src: "/sounds/Swish.mp3", volume: 0.3 },
 
     // Attacks
     normalHit: { src: "/sounds/punch.mp3" },

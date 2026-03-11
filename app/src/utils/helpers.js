@@ -71,14 +71,14 @@ export const atkNames = [
 ];
 
 export const specialNames = [
-  "⭐ Thursday Afternoon Deploy", // Guaranteed chaos and massive unpredictable damage
-  "⭐ C-Suite Escalation", // Summons the highest level executives for a devastating strike
-  "⭐ Two Weeks Notice", // The absolute finisher / Unblockable exit move
-  "⭐ Company Restructure", // A total board-wipe that hits every enemy on screen
-  "⭐ Sudo rm -rf /", // The ultimate command-line erasure (instant deletion)
-  "⭐ Drop Production DB", // The most feared, catastrophic database destruction
-  "⭐ System-Wide Ransomware", // Ultimate lockdown that freezes all enemies and drains their health
-  "⭐ Stock dropped by 40%", // The ultimate corporate chaos
+  "Thursday Afternoon Deploy", // Guaranteed chaos and massive unpredictable damage
+  "C-Suite Escalation", // Summons the highest level executives for a devastating strike
+  "Two Weeks Notice", // The absolute finisher / Unblockable exit move
+  "Company Restructure", // A total board-wipe that hits every enemy on screen
+  "Sudo rm -rf /", // The ultimate command-line erasure (instant deletion)
+  "Drop Production DB", // The most feared, catastrophic database destruction
+  "System-Wide Ransomware", // Ultimate lockdown that freezes all enemies and drains their health
+  "Stock dropped by 40%", // The ultimate corporate chaos
 ];
 
 export const critLines = [
@@ -162,7 +162,7 @@ export const buffLines = [
 
 export const MAX_HP = 100;
 export const MAX_NRG = 100;
-export const TURN_DELAY = 1100;
+export const TURN_DELAY = 1800;
 
 export function rand(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;

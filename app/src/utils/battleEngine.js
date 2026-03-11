@@ -258,8 +258,9 @@ function logHpStatus(bodyEl, f1Name, hp1, f2Name, hp2) {
   );
 }
 
-export async function animatedFight(f1, f2, refs, onEvent) {
+export async function animatedFight(f1, f2, refs, onEvent, options = {}) {
   const emit = onEvent || (() => {});
+  const { centerMode = false } = options;
   const {
     fighterA,
     fighterB,
@@ -286,8 +287,28 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     bannerCenter,
     bannerB,
     flashOverlay,
+    vignetteOverlay,
   } = refs;
   const banners = { bA: bannerA, bC: bannerCenter, bB: bannerB };
+
+  // Wrapper: routes side banners to center when centerMode is on
+  function banner(zone, text, type = "") {
+    if (centerMode && (zone === "a" || zone === "b")) {
+      setBannerZone(banners, "center", text, type);
+    } else {
+      setBannerZone(banners, zone, text, type);
+    }
+  }
+
+  // Helper: dramatic pause for major events (crit, special, KO)
+  function startMajorEvent() {
+    if (bannerCenter) bannerCenter.classList.add("major-event");
+    if (vignetteOverlay) vignetteOverlay.classList.add("active");
+  }
+  function endMajorEvent() {
+    if (bannerCenter) bannerCenter.classList.remove("major-event");
+    if (vignetteOverlay) vignetteOverlay.classList.remove("active");
+  }
 
   const s1 = { ...f1.stats },
     s2 = { ...f2.stats };
@@ -333,8 +354,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   setStatus(fighterA, null);
   setStatus(fighterB, null);
   arenaWrapper.classList.remove("intense");
-  setBannerZone(
-    banners,
+  banner(
     "center",
     `${getEmoji(f1.name)} ${f1.name} &nbsp;⚔️&nbsp; ${f2.name} ${getEmoji(f2.name)}`,
   );
@@ -371,19 +391,13 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // Turn announcement
     setActiveTurn(aEl, dEl);
     playSound("turnStart");
-    setBannerZone(
-      banners,
-      isA ? "a" : "b",
-      `🎬 Turn ${turnNum} — ${getEmoji(atk.name)} <b>${atk.name}</b>'s turn`,
-      "attack",
-    );
     addLog(
       battleLogBody,
       "🎬",
       `<b>── Turn ${turnNum} │ ${atk.name} attacks ──</b>`,
       "crowd",
     );
-    await delay(400);
+    await delay(700);
 
     if (hp1 <= 35 || hp2 <= 35) arenaWrapper.classList.add("intense");
 
@@ -401,10 +415,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
       }
       applyAnim(aEl, "poison-pulse", 500);
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `☠️ ${atk.name} takes ${pd} poison damage!`,
+        `☠️ Poison tick <b>[-${pd}hp]</b>`,
         "poison",
       );
       playSound("poison");
@@ -415,7 +428,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         "poison",
       );
       if ((isA ? hp1 : hp2) <= 0) break;
-      await delay(500);
+      await delay(800);
     }
 
     // Energy gain
@@ -443,10 +456,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       const rawDmg = rand(20, 32) + aS.power / 7;
       const dmg = Math.round(Math.max(5, rawDmg - dS.defense / 10));
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `⚡ ${getEmoji(atk.name)} ${atk.name} is charging energy...`,
+        `⚡ Charging energy...`,
         "special",
       );
       playSound("specialMove");
@@ -456,12 +468,11 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${atk.name} is charging energy...`,
         "special",
       );
-      await delay(600);
+      await delay(900);
       const spName = pick(specialNames);
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `⭐ ${atk.name} unleashes ${spName}!`,
+        `⭐ ${spName} <b>[-${dmg}hp]</b>`,
         "special",
       );
       addLog(
@@ -486,7 +497,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         "#fde68a",
       );
       screenShake(mainContainer, true);
-      await delay(300);
+      await delay(500);
       if (isA) {
         hp2 = Math.max(0, hp2 - dmg);
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
@@ -494,12 +505,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         hp1 = Math.max(0, hp1 - dmg);
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
       }
-      setBannerZone(
-        banners,
+      banner(
         "center",
-        `💫 ${def.name} took ${dmg} special damage!`,
+        `💫 ${def.name} <b>[-${dmg}hp dmg]</b> — SPECIAL!`,
         "special",
       );
+      startMajorEvent();
       addLog(
         battleLogBody,
         "💫",
@@ -508,7 +519,8 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       if (isA) combo1 = 0;
       else combo2 = 0;
-      await delay(400);
+      await delay(900);
+      endMajorEvent();
       if (Math.random() < 0.5)
         addLog(battleLogBody, "📢", pick(crowdLines), "crowd");
       logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
@@ -519,15 +531,14 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // HEAL
     if (myHp < 40 && roll < 16 + aS.luck / 7) {
       const heal = rand(10, 20);
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `🧘 ${getEmoji(atk.name)} ${atk.name} takes a breather...`,
+        `🧘 Taking a breather...`,
         "heal",
       );
       playSound("heal");
       addLog(battleLogBody, "🧘", `${atk.name} takes a breather...`, "heal");
-      await delay(500);
+      await delay(800);
       if (isA) {
         hp1 = Math.min(MAX_HP, hp1 + heal);
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
@@ -539,10 +550,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       showPopup(aEl, "+" + heal + " HP", "heal-pop");
       const c = getElCenter(aEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#39ff14", 12);
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `💚 ${atk.name} healed +${heal} HP!`,
+        `💚 ${pick(healLines)} <b>[+${heal}hp heal]</b>`,
         "heal",
       );
       addLog(
@@ -561,10 +571,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // BUFF
     if (roll > 93 && aS.hype > 45) {
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `🔋 ${getEmoji(atk.name)} ${atk.name} focuses and powers up...`,
+        `🔋 Powering up...`,
         "buff",
       );
       playSound("buff");
@@ -574,7 +583,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${atk.name} focuses and powers up...`,
         "buff",
       );
-      await delay(400);
+      await delay(700);
       applyAnim(aEl, "buff-glow", 600);
       const bStat = pick(["power", "speed", "chaos"]);
       const bAmt = rand(5, 14);
@@ -582,6 +591,11 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       renderStatBars(isA ? statsA : statsB, aS);
       setStatus(aEl, "💪");
       const label = { power: "Power", speed: "Speed", chaos: "Chaos" }[bStat];
+      banner(
+        isA ? "a" : "b",
+        `✨ ${pick(buffLines)} <b>[${label} +${bAmt}]</b>`,
+        "buff",
+      );
       addLog(
         battleLogBody,
         "✨",
@@ -597,10 +611,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // POISON ATTACK
     const defPoison = isA ? poison2 : poison1;
     if (roll > 87 && aS.chaos > 50 && defPoison === 0) {
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `🧪 ${getEmoji(atk.name)} ${atk.name} is plotting something nasty...`,
+        `🧪 Plotting something nasty...`,
         "poison",
       );
       playSound("poison");
@@ -610,9 +623,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${atk.name} is plotting something nasty...`,
         "poison",
       );
-      await delay(400);
+      await delay(700);
       applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
-      await delay(350);
+      await delay(550);
       applyAnim(dEl, "poison-pulse", 500);
       const pTurns = rand(2, 4),
         pDmg = rand(4, 9);
@@ -629,6 +642,11 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       setStatus(dEl, "☠️");
       const c = getElCenter(dEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#cc44ff", 10);
+      banner(
+        isA ? "a" : "b",
+        `☠️ ${pick(poisonLines)} <b>[-${pDmg}hp + ${pTurns}t poison]</b>`,
+        "poison",
+      );
       addLog(
         battleLogBody,
         "☠️",
@@ -646,10 +664,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     const dodgeChance = dS.speed / 350;
     if (Math.random() < dodgeChance) {
       const moveName = pick(atkNames);
-      setBannerZone(
-        banners,
+      banner(
         isA ? "a" : "b",
-        `⚔️ ${atk.name} attempts ${moveName}...`,
+        `⚔️ ${moveName}...`,
         "attack",
       );
       addLog(
@@ -658,13 +675,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${atk.name} attempts <b>${moveName}</b>...`,
         isA ? "hit-a" : "hit-b",
       );
-      await delay(400);
+      await delay(700);
       applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
-      await delay(300);
-      setBannerZone(
-        banners,
+      await delay(500);
+      banner(
         isA ? "b" : "a",
-        `💨 ${def.name} ${pick(dodgeLines)}`,
+        `💨 ${pick(dodgeLines)} <b>[miss]</b>`,
         "dodge",
       );
       playSound("dodge");
@@ -690,10 +706,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     if (isCombo) dmg = Math.round(dmg * 1.4);
 
     // Wind-up
-    setBannerZone(
-      banners,
+    banner(
       isA ? "a" : "b",
-      `👊 ${getEmoji(atk.name)} ${atk.name} winds up <b>${moveName}</b>...`,
+      `👊 <b>${moveName}</b>...`,
       "attack",
     );
     playSound(isCrit ? "criticalHit" : "normalHit");
@@ -704,7 +719,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       isA ? "hit-a" : "hit-b",
     );
     applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
-    await delay(400);
+    await delay(700);
 
     // Impact
     applyAnim(
@@ -743,15 +758,15 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
     }
 
-    await delay(300);
-    setBannerZone(
-      banners,
+    await delay(500);
+    banner(
       "center",
-      `💥 HIT! ${def.name} took -${dmg} HP` +
+      `💥 ${moveName} → ${def.name} <b>[-${dmg}hp]</b>` +
         (isCrit ? " — CRITICAL!" : "") +
         (isCombo ? ` — COMBO x${curCombo}!` : ""),
       isCrit ? "special" : "attack",
     );
+    if (isCrit || isCombo) startMajorEvent();
 
     const logCls = isA ? "hit-a" : "hit-b";
     addLog(
@@ -764,12 +779,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       logCls,
     );
     if (isCrit) {
-      await delay(200);
-      addLog(battleLogBody, "�", `<b>${pick(critLines)}</b>`, "critical");
+      await delay(500);
+      addLog(battleLogBody, "💥", `<b>${pick(critLines)}</b>`, "critical");
     }
     if (isCombo) {
       playSound("combo");
-      await delay(200);
+      await delay(500);
       addLog(
         battleLogBody,
         "🌀",
@@ -784,14 +799,17 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         "#f472b6",
       );
     }
+    if (isCrit || isCombo) {
+      await delay(400);
+      endMajorEvent();
+    }
 
     // COUNTER ATTACK
     if (Math.random() < dS.luck / 300 && (isA ? hp2 : hp1) > 0) {
-      await delay(500);
-      setBannerZone(
-        banners,
+      await delay(700);
+      banner(
         isA ? "b" : "a",
-        `↩️ ${getEmoji(def.name)} ${def.name} rushes to strike back!`,
+        `↩️ Counter attack!`,
         "counter",
       );
       playSound("counter");
@@ -801,10 +819,10 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${def.name} rushes to strike back!`,
         "counter",
       );
-      await delay(300);
+      await delay(500);
       const cDmg = rand(4, 10);
       applyAnim(dEl, isA ? "atk-l" : "atk-r", 350);
-      await delay(350);
+      await delay(550);
       applyAnim(aEl, "shake", 400);
       applyAnim(aEl, "hit-flash", 300);
       showPopup(aEl, "-" + cDmg + " ↩️", "");
@@ -824,13 +842,18 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         `${def.name} ${pick(counterLines)} <b>-${cDmg} HP</b>`,
         "counter",
       );
+      banner(
+        isA ? "b" : "a",
+        `↩️ ${pick(counterLines)} <b>[-${cDmg}hp]</b>`,
+        "counter",
+      );
     }
 
-    await delay(200);
+    await delay(400);
     dEl.classList.remove("hit-flash", "shake", "big-shake");
 
     if (Math.random() < 0.3) {
-      await delay(200);
+      await delay(300);
       addLog(battleLogBody, "📢", pick(crowdLines), "crowd");
     }
 
@@ -886,13 +909,14 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   playSound("ko");
   triggerFlash(flashOverlay, "white");
   clearBanners(bannerA, bannerCenter, bannerB);
-  setBannerZone(banners, "center", `🔔 BATTLE OVER!`, "ko");
+  banner("center", `🔔 BATTLE OVER!`, "ko");
+  startMajorEvent();
   addLog(battleLogBody, "🔔", `<b>═══════ BATTLE OVER! ═══════</b>`, "ko");
-  await delay(400);
+  await delay(600);
   // Slow-mo KO: darken arena, spin loser
   arenaWrapper.style.transition = "filter 0.5s";
   arenaWrapper.style.filter = "brightness(0.4)";
-  await delay(300);
+  await delay(500);
   applyAnim(lEl, "ko-spin", 800);
   addLog(
     battleLogBody,
@@ -900,13 +924,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     `<b>${loser.name}</b> goes down! It's over...`,
     "ko",
   );
-  await delay(700);
+  await delay(1000);
   triggerFlash(flashOverlay, "gold");
   screenShake(mainContainer, true);
   arenaWrapper.style.filter = "brightness(1)";
   playSound("victory");
-  setBannerZone(
-    banners,
+  banner(
     "center",
     `🏆 ${getEmoji(winner.name)} ${winner.name} WINS! 🏆`,
     "ko",
@@ -920,7 +943,8 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   const wc = getElCenter(wEl, arenaWrapper);
   spawnParticles(particleContainer, wc.x, wc.y, "#ffd700", 35);
   spawnTextParticle(particleContainer, wc.x, wc.y - 30, "WINNER!", "#ffd700");
-  await delay(400);
+  await delay(900);
+  endMajorEvent();
 
   const winHp = winner === f1 ? hp1 : hp2;
   addLog(
