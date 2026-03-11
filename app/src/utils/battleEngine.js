@@ -97,6 +97,54 @@ function setBanner(bannerEl, text, type = "") {
   bannerEl.innerHTML = text;
 }
 
+function clearBanners(bA, bC, bB) {
+  if (bA) {
+    bA.className = "action-banner side-a-banner active";
+    bA.innerHTML = "";
+  }
+  if (bC) {
+    bC.className = "action-banner center-banner";
+    bC.innerHTML = "";
+  }
+  if (bB) {
+    bB.className = "action-banner side-b-banner active";
+    bB.innerHTML = "";
+  }
+}
+
+function setBannerZone(banners, zone, text, type = "") {
+  const { bA, bC, bB } = banners;
+  if (zone === "a" || zone === "b") {
+    // Side banners: stack entries upward like a log
+    const target = zone === "a" ? bA : bB;
+    if (!target) return;
+    target.classList.add("active");
+    // Clear center when a side event happens
+    if (bC) {
+      bC.className = "action-banner center-banner";
+      bC.innerHTML = "";
+    }
+    const entry = document.createElement("div");
+    entry.className = "banner-entry" + (type ? ` action-${type}` : "");
+    entry.innerHTML = text;
+    target.prepend(entry);
+    // Keep max 6 entries, fade oldest
+    const entries = target.querySelectorAll(".banner-entry");
+    for (let i = 0; i < entries.length; i++) {
+      entries[i].style.opacity = Math.max(0.15, 1 - i * 0.16);
+    }
+    if (entries.length > 6) {
+      for (let i = 6; i < entries.length; i++) entries[i].remove();
+    }
+  } else {
+    // Center banner: single replace, don't touch side logs
+    if (!bC) return;
+    bC.className =
+      "action-banner center-banner action-" + (type || "attack") + " active";
+    bC.innerHTML = text;
+  }
+}
+
 function setActiveTurn(aEl, dEl) {
   if (aEl) aEl.classList.add("active-turn");
   if (dEl) dEl.classList.remove("active-turn");
@@ -234,9 +282,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     countdownOverlay,
     countdownNumber,
     countdownSub,
-    actionBanner,
+    bannerA,
+    bannerCenter,
+    bannerB,
     flashOverlay,
   } = refs;
+  const banners = { bA: bannerA, bC: bannerCenter, bB: bannerB };
 
   const s1 = { ...f1.stats },
     s2 = { ...f2.stats };
@@ -282,8 +333,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   setStatus(fighterA, null);
   setStatus(fighterB, null);
   arenaWrapper.classList.remove("intense");
-  setBanner(
-    actionBanner,
+  setBannerZone(
+    banners,
+    "center",
     `${getEmoji(f1.name)} ${f1.name} &nbsp;⚔️&nbsp; ${f2.name} ${getEmoji(f2.name)}`,
   );
   playSound("battleStart");
@@ -319,8 +371,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // Turn announcement
     setActiveTurn(aEl, dEl);
     playSound("turnStart");
-    setBanner(
-      actionBanner,
+    setBannerZone(
+      banners,
+      isA ? "a" : "b",
       `🎬 Turn ${turnNum} — ${getEmoji(atk.name)} <b>${atk.name}</b>'s turn`,
       "attack",
     );
@@ -348,8 +401,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
       }
       applyAnim(aEl, "poison-pulse", 500);
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `☠️ ${atk.name} takes ${pd} poison damage!`,
         "poison",
       );
@@ -389,8 +443,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       const rawDmg = rand(20, 32) + aS.power / 7;
       const dmg = Math.round(Math.max(5, rawDmg - dS.defense / 10));
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `⚡ ${getEmoji(atk.name)} ${atk.name} is charging energy...`,
         "special",
       );
@@ -403,7 +458,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       await delay(600);
       const spName = pick(specialNames);
-      setBanner(actionBanner, `⭐ ${atk.name} unleashes ${spName}!`, "special");
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
+        `⭐ ${atk.name} unleashes ${spName}!`,
+        "special",
+      );
       addLog(
         battleLogBody,
         "⭐",
@@ -434,8 +494,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         hp1 = Math.max(0, hp1 - dmg);
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
       }
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        "center",
         `💫 ${def.name} took ${dmg} special damage!`,
         "special",
       );
@@ -458,8 +519,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // HEAL
     if (myHp < 40 && roll < 16 + aS.luck / 7) {
       const heal = rand(10, 20);
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `🧘 ${getEmoji(atk.name)} ${atk.name} takes a breather...`,
         "heal",
       );
@@ -477,7 +539,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       showPopup(aEl, "+" + heal + " HP", "heal-pop");
       const c = getElCenter(aEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#39ff14", 12);
-      setBanner(actionBanner, `💚 ${atk.name} healed +${heal} HP!`, "heal");
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
+        `💚 ${atk.name} healed +${heal} HP!`,
+        "heal",
+      );
       addLog(
         battleLogBody,
         "💚",
@@ -494,8 +561,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // BUFF
     if (roll > 93 && aS.hype > 45) {
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `🔋 ${getEmoji(atk.name)} ${atk.name} focuses and powers up...`,
         "buff",
       );
@@ -529,8 +597,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // POISON ATTACK
     const defPoison = isA ? poison2 : poison1;
     if (roll > 87 && aS.chaos > 50 && defPoison === 0) {
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `🧪 ${getEmoji(atk.name)} ${atk.name} is plotting something nasty...`,
         "poison",
       );
@@ -577,8 +646,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     const dodgeChance = dS.speed / 350;
     if (Math.random() < dodgeChance) {
       const moveName = pick(atkNames);
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "a" : "b",
         `⚔️ ${atk.name} attempts ${moveName}...`,
         "attack",
       );
@@ -591,7 +661,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       await delay(400);
       applyAnim(aEl, isA ? "atk-r" : "atk-l", 350);
       await delay(300);
-      setBanner(actionBanner, `💨 ${def.name} ${pick(dodgeLines)}`, "dodge");
+      setBannerZone(
+        banners,
+        isA ? "b" : "a",
+        `💨 ${def.name} ${pick(dodgeLines)}`,
+        "dodge",
+      );
       playSound("dodge");
       addLog(battleLogBody, "💨", `${def.name} ${pick(dodgeLines)}`, "dodge");
       if (isA) combo1 = 0;
@@ -615,8 +690,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     if (isCombo) dmg = Math.round(dmg * 1.4);
 
     // Wind-up
-    setBanner(
-      actionBanner,
+    setBannerZone(
+      banners,
+      isA ? "a" : "b",
       `👊 ${getEmoji(atk.name)} ${atk.name} winds up <b>${moveName}</b>...`,
       "attack",
     );
@@ -668,8 +744,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     await delay(300);
-    setBanner(
-      actionBanner,
+    setBannerZone(
+      banners,
+      "center",
       `💥 HIT! ${def.name} took -${dmg} HP` +
         (isCrit ? " — CRITICAL!" : "") +
         (isCombo ? ` — COMBO x${curCombo}!` : ""),
@@ -711,8 +788,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // COUNTER ATTACK
     if (Math.random() < dS.luck / 300 && (isA ? hp2 : hp1) > 0) {
       await delay(500);
-      setBanner(
-        actionBanner,
+      setBannerZone(
+        banners,
+        isA ? "b" : "a",
         `↩️ ${getEmoji(def.name)} ${def.name} rushes to strike back!`,
         "counter",
       );
@@ -766,7 +844,10 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       turn: Math.ceil(turn / 2),
       hp1: Math.max(0, Math.round(hp1)),
       hp2: Math.max(0, Math.round(hp2)),
-      banner: actionBanner.textContent,
+      banner:
+        (bannerA?.textContent || "") +
+        (bannerCenter?.textContent ? " " + bannerCenter.textContent : "") +
+        (bannerB?.textContent ? " " + bannerB.textContent : ""),
     });
     await delay(TURN_DELAY);
   }
@@ -804,7 +885,8 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   clearActiveTurn(fighterA, fighterB);
   playSound("ko");
   triggerFlash(flashOverlay, "white");
-  setBanner(actionBanner, `🔔 BATTLE OVER!`, "ko");
+  clearBanners(bannerA, bannerCenter, bannerB);
+  setBannerZone(banners, "center", `🔔 BATTLE OVER!`, "ko");
   addLog(battleLogBody, "🔔", `<b>═══════ BATTLE OVER! ═══════</b>`, "ko");
   await delay(400);
   // Slow-mo KO: darken arena, spin loser
@@ -823,8 +905,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
   screenShake(mainContainer, true);
   arenaWrapper.style.filter = "brightness(1)";
   playSound("victory");
-  setBanner(
-    actionBanner,
+  setBannerZone(
+    banners,
+    "center",
     `🏆 ${getEmoji(winner.name)} ${winner.name} WINS! 🏆`,
     "ko",
   );

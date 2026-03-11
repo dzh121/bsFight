@@ -94,7 +94,9 @@ function App() {
   const countdownOverlayRef = useRef(null);
   const countdownNumberRef = useRef(null);
   const countdownSubRef = useRef(null);
-  const actionBannerRef = useRef(null);
+  const bannerARef = useRef(null);
+  const bannerCenterRef = useRef(null);
+  const bannerBRef = useRef(null);
   const flashRef = useRef(null);
 
   const getRefs = useCallback(
@@ -120,7 +122,9 @@ function App() {
       countdownOverlay: countdownOverlayRef.current,
       countdownNumber: countdownNumberRef.current,
       countdownSub: countdownSubRef.current,
-      actionBanner: actionBannerRef.current,
+      bannerA: bannerARef.current,
+      bannerCenter: bannerCenterRef.current,
+      bannerB: bannerBRef.current,
       flashOverlay: flashRef.current,
     }),
     [],
@@ -716,8 +720,15 @@ function App() {
               </div>
             </div>
 
-            {/* Action Banner */}
-            <div className="action-banner" ref={actionBannerRef} />
+            {/* Action Banners — 3 zones */}
+            <div className="banner-strip">
+              <div className="action-banner side-a-banner" ref={bannerARef} />
+              <div
+                className="action-banner center-banner"
+                ref={bannerCenterRef}
+              />
+              <div className="action-banner side-b-banner" ref={bannerBRef} />
+            </div>
           </div>
 
           {/* Battle Log Ticker */}

@@ -634,95 +634,217 @@ button:disabled {
   letter-spacing: 3px;
 }
 
-/* ── Action Banner (large, centered overlay) ── */
-.action-banner {
+/* ── Banner Strip (3-zone: left / center / right) ── */
+.banner-strip {
   position: absolute;
-  top: 90%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  min-width: 320px;
-  max-width: 85%;
-  padding: 18px 36px;
-  background: rgba(0, 0, 0, 0.88);
-  border: 2px solid var(--border-bright);
-  border-radius: 12px;
+  bottom: 2%;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 6px;
+  padding: 0 8px;
+  z-index: 20;
+  pointer-events: none;
+  align-items: end;
+}
+
+/* ── Side banners (stacking log) ── */
+.side-a-banner,
+.side-b-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 220px;
+  overflow: hidden;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+  opacity: 1;
+  transform: none;
+}
+.side-a-banner {
+  align-items: flex-start;
+}
+.side-b-banner {
+  align-items: flex-end;
+}
+.side-a-banner.active,
+.side-b-banner.active {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+.side-a-banner:empty,
+.side-b-banner:empty {
+  opacity: 1;
+}
+
+/* Individual stacked entry */
+.banner-entry {
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
   font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  z-index: 20;
-  backdrop-filter: blur(12px);
-  animation: bannerSlam 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow:
-    0 0 30px rgba(0, 0, 0, 0.6),
-    inset 0 0 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  animation: entrySlideIn 0.2s ease-out;
+  transition: opacity 0.3s;
 }
-@keyframes bannerSlam {
+@keyframes entrySlideIn {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.6);
+    transform: translateY(8px) scale(0.95);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-.action-banner:empty {
-  display: none;
+/* Entry type colors */
+.banner-entry.action-attack {
+  border-color: rgba(255, 51, 51, 0.5);
+  color: #ff6666;
+  text-shadow: 0 0 10px rgba(255, 51, 51, 0.4);
 }
+.banner-entry.action-special {
+  border-color: rgba(255, 215, 0, 0.5);
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+.banner-entry.action-heal {
+  border-color: rgba(57, 255, 20, 0.4);
+  color: var(--neon-green);
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+.banner-entry.action-poison {
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #d8b4fe;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+.banner-entry.action-dodge {
+  border-color: rgba(0, 240, 255, 0.4);
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+.banner-entry.action-buff {
+  border-color: rgba(255, 0, 229, 0.4);
+  color: var(--magenta);
+  text-shadow: 0 0 10px rgba(255, 0, 229, 0.3);
+}
+.banner-entry.action-counter {
+  border-color: rgba(251, 146, 60, 0.4);
+  color: #fdba74;
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.3);
+}
+
+/* ── Center banner (single replace) ── */
+.center-banner {
+  justify-self: center;
+  align-self: end;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.88);
+  border: 2px solid var(--border-bright);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 1px rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  transform: scale(0.92);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+.center-banner.active {
+  opacity: 1;
+  transform: scale(1);
+  font-size: 0.95rem;
+  padding: 12px 20px;
+  animation: bannerSlam 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.center-banner:empty {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+@keyframes bannerSlam {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Banner type colors ── */
 .action-banner.action-attack {
   border-color: rgba(255, 51, 51, 0.6);
   color: #ff6666;
-  text-shadow: 0 0 20px rgba(255, 51, 51, 0.5);
+  text-shadow: 0 0 14px rgba(255, 51, 51, 0.5);
 }
 .action-banner.action-special {
   border-color: rgba(255, 215, 0, 0.6);
   color: var(--gold);
-  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-  font-size: 1.3rem;
-  padding: 22px 40px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 .action-banner.action-heal {
   border-color: rgba(57, 255, 20, 0.5);
   color: var(--neon-green);
-  text-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+  text-shadow: 0 0 14px rgba(57, 255, 20, 0.4);
 }
 .action-banner.action-poison {
   border-color: rgba(168, 85, 247, 0.5);
   color: #d8b4fe;
-  text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  text-shadow: 0 0 14px rgba(168, 85, 247, 0.4);
 }
 .action-banner.action-dodge {
   border-color: rgba(0, 240, 255, 0.5);
   color: var(--cyan);
-  text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
 }
 .action-banner.action-buff {
   border-color: rgba(255, 0, 229, 0.5);
   color: var(--magenta);
-  text-shadow: 0 0 20px rgba(255, 0, 229, 0.4);
+  text-shadow: 0 0 14px rgba(255, 0, 229, 0.4);
 }
 .action-banner.action-counter {
   border-color: rgba(251, 146, 60, 0.5);
   color: #fdba74;
-  text-shadow: 0 0 20px rgba(251, 146, 60, 0.4);
+  text-shadow: 0 0 14px rgba(251, 146, 60, 0.4);
 }
 .action-banner.action-ko {
   border-color: rgba(255, 215, 0, 0.7);
   color: var(--gold);
-  font-size: 1.5rem;
-  text-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
   animation:
-    bannerSlam 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    bannerSlam 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
     bannerPulse 0.8s ease infinite alternate;
-  padding: 24px 50px;
+}
+.center-banner.action-ko.active {
+  font-size: 1.2rem;
+  padding: 16px 30px;
 }
 @keyframes bannerPulse {
   0% {
@@ -732,8 +854,8 @@ button:disabled {
   }
   100% {
     box-shadow:
-      0 0 60px rgba(255, 215, 0, 0.2),
-      inset 0 0 40px rgba(255, 215, 0, 0.08);
+      0 0 50px rgba(255, 215, 0, 0.2),
+      inset 0 0 30px rgba(255, 215, 0, 0.08);
   }
 }
 
