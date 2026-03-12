@@ -26,94 +26,168 @@ const ACTION_DEFS = [
 const ACTION_MAP = Object.fromEntries(ACTION_DEFS.map(a => [a.id, a]));
 
 /**
- * Check which actions a fighter is eligible for this turn.
- * @param {object} aS - attacker stats
- * @param {object} dS - defender stats
- * @param {object} state - current battle state for this fighter
- *   { hp, maxHp, nrg, maxNrg, shield, reflect, isTaunted,
- *     hasDebuffs, enemyHp, enemyStunned, enemyBurning, enemyPoisoned,
- *     enemySabotaged, enemyNrg, enemyDefense }
- * @returns {string[]} list of eligible action IDs (excluding normal_attack)
+ * Build a weighted action pool based on fighter stats and battle state.
+ * Stats don't just gate actions — they influence HOW LIKELY each action
+ * is to appear in the player's options.
+ *
+ * - Luck: rare/powerful options (special, precision, chain lightning)
+ * - Power: normal attack frequency + damage scaling
+ * - Defense: shield, reflect
+ * - Wit: poison, sabotage, strategic picks; also more choices
+ * - Chaos: burn, stun, chain lightning; unpredictable choice count
+ * - Hype: buff, lifesteal, intimidate
+ * - Swagger: taunt, intimidate, siphon
+ * - Focus: precision, special, siphon; also more choices
+ * - Stamina: heal, cleanse
+ * - Grit: berserker, endure
+ * - Speed: chain lightning
  */
-function getEligibleActions(aS, dS, state) {
-  const eligible = [];
+function buildWeightedPool(aS, dS, state) {
+  const pool = [];
+  const add = (id, weight) => { if (weight > 0.05) pool.push({ id, weight }); };
 
+  // Normal attack — power makes it appear more often
+  add("normal_attack", 2.5 + aS.power / 15);
+
+  // Special move — luck + focus; hard req: 60 NRG
   if (state.nrg >= 60)
-    eligible.push("special_move");
+    add("special_move", 0.4 + aS.luck / 22 + aS.focus / 35);
 
-  if (state.hp < 60)
-    eligible.push("heal");
+  // Heal — stamina + grit when hurt; more weight the lower HP
+  if (state.hp < 75) {
+    const hpUrgency = state.hp < 30 ? 2.5 : state.hp < 50 ? 1.2 : 0.3;
+    add("heal", hpUrgency + aS.stamina / 28);
+  }
 
-  if (aS.hype > 35)
-    eligible.push("buff");
+  // Buff — hype driven, free action
+  add("buff", 0.3 + aS.hype / 28);
 
-  if (aS.defense > 35 && state.shield === 0)
-    eligible.push("shield");
+  // Shield — defense driven; only if no active shield
+  if (state.shield === 0)
+    add("shield", 0.3 + aS.defense / 22);
 
-  if (aS.chaos > 45 && !state.enemyStunned)
-    eligible.push("stun_attack");
+  // Stun — chaos driven; not if enemy already stunned
+  if (!state.enemyStunned)
+    add("stun_attack", 0.2 + aS.chaos / 25);
 
-  if (aS.hype > 30 && state.hp < 75)
-    eligible.push("lifesteal");
+  // Lifesteal — hype + swagger; only when hurt
+  if (state.hp < 85)
+    add("lifesteal", 0.3 + aS.hype / 30 + aS.swagger / 45);
 
-  if (aS.focus > 35 && aS.swagger > 25 && state.enemyNrg > 15)
-    eligible.push("siphon_energy");
+  // Siphon — focus + swagger; enemy must have energy
+  if (state.enemyNrg > 10)
+    add("siphon_energy", 0.2 + aS.focus / 30 + aS.swagger / 40);
 
-  if (aS.chaos > 40 && aS.speed > 30)
-    eligible.push("chain_lightning");
+  // Chain lightning — chaos + speed; luck boosts as rare action
+  add("chain_lightning", 0.15 + aS.chaos / 28 + aS.speed / 40 + aS.luck / 60);
 
-  if (aS.power > 40 && aS.wit > 30 && state.enemyDefense > 15)
-    eligible.push("armor_break");
+  // Armor break — power + wit; needs enemy to have defense
+  if (state.enemyDefense > 8)
+    add("armor_break", 0.2 + aS.power / 28 + aS.wit / 40);
 
-  if (aS.grit > 40 && aS.power > 35 && state.hp > 20)
-    eligible.push("berserker_strike");
+  // Berserker — grit + power; risky, need HP to spare
+  if (state.hp > 15)
+    add("berserker_strike", 0.15 + aS.grit / 22 + aS.power / 40);
 
-  if (aS.hype > 35 && aS.swagger > 30 && state.hp < state.enemyHp - 10)
-    eligible.push("soul_swap");
+  // Soul swap — hype + swagger; only when behind on HP
+  if (state.hp < state.enemyHp - 5)
+    add("soul_swap", 0.1 + aS.hype / 30 + aS.swagger / 35);
 
-  if (aS.defense > 40 && state.reflect === 0)
-    eligible.push("reflect");
+  // Reflect — defense; only if no active reflect
+  if (state.reflect === 0)
+    add("reflect", 0.2 + aS.defense / 25);
 
-  if (aS.chaos > 35 && !state.enemyBurning)
-    eligible.push("burn_attack");
+  // Burn — chaos; not if already burning
+  if (!state.enemyBurning)
+    add("burn_attack", 0.2 + aS.chaos / 24);
 
-  if (aS.wit > 35 && !state.enemyPoisoned)
-    eligible.push("poison_attack");
+  // Poison — wit; not if already poisoned
+  if (!state.enemyPoisoned)
+    add("poison_attack", 0.2 + aS.wit / 24);
 
-  if (aS.wit > 40 && aS.chaos > 30 && !state.enemySabotaged)
-    eligible.push("sabotage");
+  // Sabotage — wit + chaos; not if already sabotaged
+  if (!state.enemySabotaged)
+    add("sabotage", 0.15 + aS.wit / 28 + aS.chaos / 40);
 
-  if (aS.swagger > 35 && aS.hype > 25)
-    eligible.push("intimidate");
+  // Intimidate — swagger + hype
+  add("intimidate", 0.15 + aS.swagger / 24 + aS.hype / 40);
 
-  if (aS.swagger > 40 && aS.hype > 30)
-    eligible.push("taunt");
+  // Taunt — swagger-heavy
+  add("taunt", 0.1 + aS.swagger / 20);
 
-  if (aS.focus > 50)
-    eligible.push("precision_strike");
+  // Precision strike — focus; RARE — luck amplifies heavily
+  add("precision_strike", 0.05 + aS.focus / 20 * (1 + aS.luck / 50));
 
+  // Cleanse — stamina + wit; only with active debuffs
   if (state.hasDebuffs)
-    eligible.push("cleanse");
+    add("cleanse", 1.8 + aS.stamina / 25 + aS.wit / 40);
 
-  return eligible;
+  return pool;
 }
 
-/** Fisher-Yates shuffle (in-place) */
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+/**
+ * Determine how many action choices this fighter gets (1–5).
+ * Wit and Focus increase choices. Chaos adds swing. Luck helps slightly.
+ */
+function rollNumChoices(aS) {
+  // Base: random 1-3
+  let n = 1 + Math.floor(Math.random() * 3);
+
+  // Wit: strategic mind sees more options
+  if (aS.wit > 45 && Math.random() < 0.55) n++;
+  if (aS.wit > 70 && Math.random() < 0.35) n++;
+
+  // Focus: concentration reveals options
+  if (aS.focus > 50 && Math.random() < 0.4) n++;
+
+  // Luck: might stumble onto an extra option
+  if (aS.luck > 55 && Math.random() < 0.3) n++;
+
+  // Chaos: unpredictable — could add or remove an option
+  if (aS.chaos > 40) {
+    const swing = Math.random();
+    if (swing < 0.25) n--;
+    else if (swing > 0.75) n++;
   }
-  return arr;
+
+  // Low overall stats = fewer options
+  const avgStat = (aS.power + aS.speed + aS.wit + aS.luck + aS.focus) / 5;
+  if (avgStat < 35 && Math.random() < 0.4) n--;
+
+  return Math.max(1, Math.min(5, n));
+}
+
+/**
+ * Weighted random selection without replacement.
+ * Picks `count` items from a weighted pool.
+ */
+function weightedSample(pool, count) {
+  const remaining = [...pool];
+  const selected = [];
+  const pick = Math.min(count, remaining.length);
+
+  for (let i = 0; i < pick; i++) {
+    const total = remaining.reduce((s, item) => s + item.weight, 0);
+    let r = Math.random() * total;
+    let idx = 0;
+    for (let j = 0; j < remaining.length; j++) {
+      r -= remaining[j].weight;
+      if (r <= 0) { idx = j; break; }
+    }
+    selected.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  return selected;
 }
 
 /**
  * Generate action options for a player-controlled turn.
- * Returns 2–5 action option objects, always including normal_attack first.
+ * Returns 1–5 action option objects. Stats deeply influence both
+ * WHICH actions appear and HOW MANY choices the player gets.
  *
  * @param {object} aS - attacker stats
  * @param {object} dS - defender stats
- * @param {object} state - battle state (see getEligibleActions)
+ * @param {object} state - battle state
  * @returns {Array<{id, name, emoji, desc, cat}>}
  */
 export function generateActionOptions(aS, dS, state) {
@@ -122,12 +196,22 @@ export function generateActionOptions(aS, dS, state) {
     return [ACTION_MAP["normal_attack"]];
   }
 
-  const eligible = getEligibleActions(aS, dS, state);
-  shuffle(eligible);
+  const numChoices = rollNumChoices(aS);
+  const pool = buildWeightedPool(aS, dS, state);
+  const selected = weightedSample(pool, numChoices);
 
-  // Pick up to 4 extra options (total 5 with normal_attack)
-  const picked = eligible.slice(0, Math.min(4, eligible.length));
-  const options = [ACTION_MAP["normal_attack"], ...picked.map(id => ACTION_MAP[id])];
+  // Convert to action objects, deduplicate just in case
+  const seen = new Set();
+  const options = [];
+  for (const item of selected) {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      options.push(ACTION_MAP[item.id]);
+    }
+  }
+
+  // Fallback: if somehow empty, give normal attack
+  if (options.length === 0) options.push(ACTION_MAP["normal_attack"]);
 
   return options;
 }
