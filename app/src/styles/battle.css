@@ -551,7 +551,7 @@ button:disabled {
   padding: 24px;
   position: relative;
   z-index: 1;
-  margin-top: 70px; 
+  margin-top: 70px;
 }
 
 .fighter {
@@ -620,8 +620,14 @@ button:disabled {
   animation: buffIconPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes buffIconPop {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .buff-icon.buff-shield {
   background: rgba(56, 189, 248, 0.2);
@@ -705,23 +711,36 @@ button:disabled {
   transition: opacity 0.4s;
 }
 @keyframes turnTagPop {
-  0% { transform: translateX(-50%) scale(0.3) translateY(8px); opacity: 0; }
-  60% { transform: translateX(-50%) scale(1.08) translateY(-2px); opacity: 1; }
-  100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
+  0% {
+    transform: translateX(-50%) scale(0.3) translateY(8px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) scale(1.08) translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 .turn-tag-atk {
   background: rgba(255, 51, 51, 0.92);
   color: #fff;
   border: 1px solid rgba(255, 100, 100, 0.7);
-  box-shadow: 0 0 16px rgba(255, 51, 51, 0.4), 0 2px 8px rgba(0,0,0,0.4);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  box-shadow:
+    0 0 16px rgba(255, 51, 51, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 .turn-tag-def {
   background: rgba(251, 146, 60, 0.92);
   color: #fff;
   border: 1px solid rgba(251, 180, 100, 0.7);
-  box-shadow: 0 0 16px rgba(251, 146, 60, 0.4), 0 2px 8px rgba(0,0,0,0.4);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  box-shadow:
+    0 0 16px rgba(251, 146, 60, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* HP-based fighter visual states */
@@ -733,16 +752,28 @@ button:disabled {
   animation: woundedIdle 2s ease-in-out infinite;
 }
 @keyframes woundedIdle {
-  0%, 100% { box-shadow: 0 0 30px rgba(0, 0, 0, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(251, 146, 60, 0.15); }
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(251, 146, 60, 0.15);
+  }
 }
 .fighter.hp-critical {
   border-color: rgba(239, 68, 68, 0.5);
   animation: criticalPulse 1s ease-in-out infinite;
 }
 @keyframes criticalPulse {
-  0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.1); filter: brightness(1); }
-  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.25); filter: brightness(0.92); }
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.1);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.25);
+    filter: brightness(0.92);
+  }
 }
 
 /* VS divider in arena */
@@ -795,7 +826,9 @@ button:disabled {
   max-width: 100%;
   width: fit-content;
   margin: 0 auto;
-  transition: opacity 0.3s, transform 0.3s;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
 }
 
 /* Thrown from fighter A (left side) */
@@ -873,13 +906,24 @@ button:disabled {
   border-color: rgba(255, 51, 51, 0.7);
   color: #ff6666;
   text-shadow: 0 0 16px rgba(255, 51, 51, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 51, 51, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 51, 51, 0.2);
   animation: bannerPunch 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerPunch {
-  0% { opacity: 0; transform: translateX(-60px) scale(0.8) rotate(-3deg); }
-  50% { opacity: 1; transform: translateX(8px) scale(1.06) rotate(1deg); }
-  100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-60px) scale(0.8) rotate(-3deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(8px) scale(1.06) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0);
+  }
 }
 
 /* SPECIAL — explosive scale from center with glow pulse */
@@ -887,14 +931,31 @@ button:disabled {
   border-color: rgba(255, 215, 0, 0.7);
   color: var(--gold);
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 215, 0, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(255, 215, 0, 0.25);
   animation: bannerExplode 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 @keyframes bannerExplode {
-  0% { opacity: 0; transform: scale(2.5); filter: brightness(3); }
-  40% { opacity: 1; transform: scale(0.92); filter: brightness(1.3); }
-  70% { transform: scale(1.05); filter: brightness(1.1); }
-  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scale(2.5);
+    filter: brightness(3);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(0.92);
+    filter: brightness(1.3);
+  }
+  70% {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* HEAL — soft float up from below */
@@ -902,13 +963,26 @@ button:disabled {
   border-color: rgba(57, 255, 20, 0.6);
   color: var(--neon-green);
   text-shadow: 0 0 16px rgba(57, 255, 20, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(57, 255, 20, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(57, 255, 20, 0.2);
   animation: bannerFloat 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerFloat {
-  0% { opacity: 0; transform: translateY(30px) scale(0.9); filter: brightness(1.5); }
-  60% { opacity: 1; transform: translateY(-4px) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    filter: brightness(1.5);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* POISON — dripping wobble entrance */
@@ -916,14 +990,27 @@ button:disabled {
   border-color: rgba(168, 85, 247, 0.6);
   color: #d8b4fe;
   text-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(168, 85, 247, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(168, 85, 247, 0.2);
   animation: bannerDrip 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerDrip {
-  0% { opacity: 0; transform: translateY(-20px) scaleY(0.5); }
-  40% { opacity: 1; transform: translateY(6px) scaleY(1.08); }
-  70% { transform: translateY(-2px) scaleY(0.97); }
-  100% { opacity: 1; transform: translateY(0) scaleY(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scaleY(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(6px) scaleY(1.08);
+  }
+  70% {
+    transform: translateY(-2px) scaleY(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
 }
 
 /* DODGE — quick sidestep slide that blocks the attack banner */
@@ -931,14 +1018,25 @@ button:disabled {
   border-color: rgba(0, 240, 255, 0.6);
   color: var(--cyan);
   text-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 240, 255, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(0, 240, 255, 0.2);
   animation: bannerDodge 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
   z-index: 5;
 }
 @keyframes bannerDodge {
-  0% { opacity: 0; transform: translateX(50px) rotate(8deg) scale(0.7); }
-  50% { opacity: 1; transform: translateX(-10px) rotate(-2deg) scale(1.08); }
-  100% { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(50px) rotate(8deg) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-10px) rotate(-2deg) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotate(0) scale(1);
+  }
 }
 
 /* BUFF — sparkle rise */
@@ -946,13 +1044,27 @@ button:disabled {
   border-color: rgba(255, 0, 229, 0.6);
   color: var(--magenta);
   text-shadow: 0 0 16px rgba(255, 0, 229, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 0, 229, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 0, 229, 0.2);
   animation: bannerSparkle 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerSparkle {
-  0% { opacity: 0; transform: scale(0.5) translateY(15px); filter: brightness(2) hue-rotate(20deg); }
-  60% { opacity: 1; transform: scale(1.06) translateY(-3px); filter: brightness(1.2); }
-  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(15px);
+    filter: brightness(2) hue-rotate(20deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-3px);
+    filter: brightness(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: brightness(1);
+  }
 }
 
 /* COUNTER — fast snap-in from opposite side (riposte feel) */
@@ -960,14 +1072,25 @@ button:disabled {
   border-color: rgba(251, 146, 60, 0.6);
   color: #fdba74;
   text-shadow: 0 0 16px rgba(251, 146, 60, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(251, 146, 60, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(251, 146, 60, 0.2);
   animation: bannerRiposte 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
   z-index: 5;
 }
 @keyframes bannerRiposte {
-  0% { opacity: 0; transform: translateX(80px) rotate(10deg) scale(0.6); }
-  60% { opacity: 1; transform: translateX(-6px) rotate(-1deg) scale(1.05); }
-  100% { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(80px) rotate(10deg) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-6px) rotate(-1deg) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotate(0) scale(1);
+  }
 }
 
 /* STUN — jolt/shake entrance */
@@ -975,15 +1098,33 @@ button:disabled {
   border-color: rgba(234, 179, 8, 0.7);
   color: #fbbf24;
   text-shadow: 0 0 16px rgba(234, 179, 8, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(234, 179, 8, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(234, 179, 8, 0.2);
   animation: bannerJolt 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerJolt {
-  0% { opacity: 0; transform: scale(1.8); filter: brightness(3); }
-  30% { opacity: 1; transform: scale(0.95) translateX(-5px); filter: brightness(1.4); }
-  55% { transform: scale(1.02) translateX(4px); }
-  75% { transform: scale(0.99) translateX(-2px); }
-  100% { opacity: 1; transform: scale(1) translateX(0); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scale(1.8);
+    filter: brightness(3);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.95) translateX(-5px);
+    filter: brightness(1.4);
+  }
+  55% {
+    transform: scale(1.02) translateX(4px);
+  }
+  75% {
+    transform: scale(0.99) translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    filter: brightness(1);
+  }
 }
 
 /* LIFESTEAL — drain-in suction effect */
@@ -991,13 +1132,27 @@ button:disabled {
   border-color: rgba(220, 38, 38, 0.7);
   color: #f87171;
   text-shadow: 0 0 16px rgba(220, 38, 38, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(220, 38, 38, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(220, 38, 38, 0.25);
   animation: bannerDrain 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerDrain {
-  0% { opacity: 0; transform: scaleX(1.6) scaleY(0.5); filter: brightness(0.5) saturate(2); }
-  50% { opacity: 1; transform: scaleX(0.95) scaleY(1.05); filter: brightness(1.3); }
-  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scaleX(1.6) scaleY(0.5);
+    filter: brightness(0.5) saturate(2);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(0.95) scaleY(1.05);
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* SHIELD — solid expand outward (barrier feel) */
@@ -1005,13 +1160,24 @@ button:disabled {
   border-color: rgba(56, 189, 248, 0.7);
   color: #7dd3fc;
   text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(56, 189, 248, 0.25);
   animation: bannerBarrier 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 @keyframes bannerBarrier {
-  0% { opacity: 0; transform: scaleX(0) scaleY(1.3); }
-  50% { opacity: 1; transform: scaleX(1.08) scaleY(0.96); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scaleX(0) scaleY(1.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.08) scaleY(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* RAGE — fiery shake explosion */
@@ -1019,15 +1185,33 @@ button:disabled {
   border-color: rgba(239, 68, 68, 0.8);
   color: #ff4444;
   text-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(239, 68, 68, 0.3);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(239, 68, 68, 0.3);
   animation: bannerRage 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerRage {
-  0% { opacity: 0; transform: scale(2) rotate(-5deg); filter: brightness(3) saturate(2); }
-  25% { opacity: 1; transform: scale(0.9) rotate(3deg); filter: brightness(1.5); }
-  45% { transform: scale(1.08) rotate(-2deg); }
-  65% { transform: scale(0.97) rotate(1deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scale(2) rotate(-5deg);
+    filter: brightness(3) saturate(2);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(0.9) rotate(3deg);
+    filter: brightness(1.5);
+  }
+  45% {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  65% {
+    transform: scale(0.97) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    filter: brightness(1);
+  }
 }
 
 /* REFLECT — mirror flip */
@@ -1035,13 +1219,27 @@ button:disabled {
   border-color: rgba(96, 165, 250, 0.7);
   color: #93c5fd;
   text-shadow: 0 0 16px rgba(96, 165, 250, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(96, 165, 250, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(96, 165, 250, 0.25);
   animation: bannerMirror 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerMirror {
-  0% { opacity: 0; transform: scaleX(-1) scale(0.7); filter: brightness(2) hue-rotate(180deg); }
-  50% { opacity: 1; transform: scaleX(1.05) scale(1.03); filter: brightness(1.2) hue-rotate(0deg); }
-  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scaleX(-1) scale(0.7);
+    filter: brightness(2) hue-rotate(180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.05) scale(1.03);
+    filter: brightness(1.2) hue-rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* BURN — flicker in from below with heat distortion */
@@ -1049,14 +1247,31 @@ button:disabled {
   border-color: rgba(251, 146, 60, 0.7);
   color: #fb923c;
   text-shadow: 0 0 16px rgba(251, 146, 60, 0.6);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(251, 146, 60, 0.3);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(251, 146, 60, 0.3);
   animation: bannerBurn 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerBurn {
-  0% { opacity: 0; transform: translateY(20px) scaleY(0.6); filter: brightness(2) saturate(3); }
-  30% { opacity: 0.8; transform: translateY(-4px) scaleY(1.1); filter: brightness(1.5) saturate(1.5); }
-  60% { opacity: 1; transform: translateY(2px) scaleY(0.98); }
-  100% { opacity: 1; transform: translateY(0) scaleY(1); filter: brightness(1) saturate(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scaleY(0.6);
+    filter: brightness(2) saturate(3);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateY(-4px) scaleY(1.1);
+    filter: brightness(1.5) saturate(1.5);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scaleY(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    filter: brightness(1) saturate(1);
+  }
 }
 
 /* DOUBLE STRIKE — double-tap bounce */
@@ -1064,15 +1279,32 @@ button:disabled {
   border-color: rgba(168, 85, 247, 0.7);
   color: #c084fc;
   text-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(168, 85, 247, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(168, 85, 247, 0.25);
   animation: bannerDouble 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerDouble {
-  0% { opacity: 0; transform: translateX(-30px) scale(0.7); }
-  30% { opacity: 1; transform: translateX(4px) scale(1.05); }
-  50% { transform: translateX(-20px) scale(0.9); opacity: 0.7; }
-  70% { transform: translateX(3px) scale(1.04); opacity: 1; }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: translateX(4px) scale(1.05);
+  }
+  50% {
+    transform: translateX(-20px) scale(0.9);
+    opacity: 0.7;
+  }
+  70% {
+    transform: translateX(3px) scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* EXECUTE — devastating slam from above */
@@ -1080,14 +1312,30 @@ button:disabled {
   border-color: rgba(220, 38, 38, 0.9);
   color: #ff4444;
   text-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(220, 38, 38, 0.4);
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(220, 38, 38, 0.4);
   animation: bannerExecute 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 @keyframes bannerExecute {
-  0% { opacity: 0; transform: translateY(-50px) scale(1.5); filter: brightness(3) saturate(2); }
-  40% { opacity: 1; transform: translateY(5px) scale(0.95); filter: brightness(1.5); }
-  70% { transform: translateY(-2px) scale(1.03); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(1.5);
+    filter: brightness(3) saturate(2);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(5px) scale(0.95);
+    filter: brightness(1.5);
+  }
+  70% {
+    transform: translateY(-2px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* SABOTAGE — glitchy distortion entrance */
@@ -1095,14 +1343,32 @@ button:disabled {
   border-color: rgba(139, 92, 246, 0.7);
   color: #a78bfa;
   text-shadow: 0 0 16px rgba(139, 92, 246, 0.6);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(139, 92, 246, 0.3);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(139, 92, 246, 0.3);
   animation: bannerGlitch 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerGlitch {
-  0% { opacity: 0; transform: skewX(20deg) translateX(-30px); filter: hue-rotate(90deg); }
-  30% { opacity: 0.8; transform: skewX(-10deg) translateX(10px); filter: hue-rotate(-45deg); }
-  60% { opacity: 1; transform: skewX(5deg) translateX(-3px); filter: hue-rotate(15deg); }
-  100% { opacity: 1; transform: skewX(0) translateX(0); filter: hue-rotate(0); }
+  0% {
+    opacity: 0;
+    transform: skewX(20deg) translateX(-30px);
+    filter: hue-rotate(90deg);
+  }
+  30% {
+    opacity: 0.8;
+    transform: skewX(-10deg) translateX(10px);
+    filter: hue-rotate(-45deg);
+  }
+  60% {
+    opacity: 1;
+    transform: skewX(5deg) translateX(-3px);
+    filter: hue-rotate(15deg);
+  }
+  100% {
+    opacity: 1;
+    transform: skewX(0) translateX(0);
+    filter: hue-rotate(0);
+  }
 }
 
 /* MOMENTUM — fast streak entrance */
@@ -1110,13 +1376,24 @@ button:disabled {
   border-color: rgba(34, 197, 94, 0.7);
   color: #4ade80;
   text-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(34, 197, 94, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(34, 197, 94, 0.25);
   animation: bannerStreak 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerStreak {
-  0% { opacity: 0; transform: translateX(-80px) scaleX(1.5); }
-  50% { opacity: 1; transform: translateX(6px) scaleX(0.95); }
-  100% { opacity: 1; transform: translateX(0) scaleX(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(-80px) scaleX(1.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(6px) scaleX(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scaleX(1);
+  }
 }
 
 /* INTIMIDATE — heavy pressure drop */
@@ -1124,13 +1401,27 @@ button:disabled {
   border-color: rgba(236, 72, 153, 0.7);
   color: #f472b6;
   text-shadow: 0 0 16px rgba(236, 72, 153, 0.6);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(236, 72, 153, 0.3);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(236, 72, 153, 0.3);
   animation: bannerPressure 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 @keyframes bannerPressure {
-  0% { opacity: 0; transform: scale(1.8) translateY(-10px); filter: brightness(0.3); }
-  50% { opacity: 1; transform: scale(0.95) translateY(2px); filter: brightness(1.3); }
-  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+  0% {
+    opacity: 0;
+    transform: scale(1.8) translateY(-10px);
+    filter: brightness(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.95) translateY(2px);
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: brightness(1);
+  }
 }
 
 /* CLEANSE — purifying wash */
@@ -1138,13 +1429,27 @@ button:disabled {
   border-color: rgba(56, 189, 248, 0.7);
   color: #7dd3fc;
   text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(56, 189, 248, 0.25);
   animation: bannerWash 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 @keyframes bannerWash {
-  0% { opacity: 0; transform: scaleY(0.3) translateY(20px); filter: brightness(2) saturate(0); }
-  50% { opacity: 1; transform: scaleY(1.05) translateY(-3px); filter: brightness(1.2) saturate(1.5); }
-  100% { opacity: 1; transform: scaleY(1) translateY(0); filter: brightness(1) saturate(1); }
+  0% {
+    opacity: 0;
+    transform: scaleY(0.3) translateY(20px);
+    filter: brightness(2) saturate(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.05) translateY(-3px);
+    filter: brightness(1.2) saturate(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+    filter: brightness(1) saturate(1);
+  }
 }
 
 /* CROWD EVENT — dramatic center announcement */
@@ -1152,15 +1457,28 @@ button:disabled {
   border-color: rgba(250, 204, 21, 0.8);
   color: #fde047;
   text-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(250, 204, 21, 0.3);
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(250, 204, 21, 0.3);
   animation: bannerEvent 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   font-size: 1.1rem;
 }
 @keyframes bannerEvent {
-  0% { opacity: 0; transform: scale(0) rotate(10deg); }
-  50% { opacity: 1; transform: scale(1.1) rotate(-3deg); }
-  75% { transform: scale(0.97) rotate(1deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(10deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(-3deg);
+  }
+  75% {
+    transform: scale(0.97) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }
 
 /* KO — epic slam with glow pulse */
@@ -1237,7 +1555,11 @@ button:disabled {
 .arena-stage .major-event-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
   z-index: 15;
   pointer-events: none;
   opacity: 0;
@@ -1662,44 +1984,86 @@ button:disabled {
   animation: stunZap 0.6s;
 }
 @keyframes stunZap {
-  0% { filter: brightness(1); transform: translateX(0); }
-  15% { filter: brightness(2.5) saturate(0); transform: translateX(-4px); }
-  30% { filter: brightness(1) saturate(0.3); transform: translateX(4px); }
-  50% { filter: brightness(2) saturate(0); transform: translateX(-3px); }
-  70% { filter: brightness(1) saturate(0.5); transform: translateX(2px); }
-  100% { filter: brightness(0.7) saturate(0.4); transform: translateX(0); }
+  0% {
+    filter: brightness(1);
+    transform: translateX(0);
+  }
+  15% {
+    filter: brightness(2.5) saturate(0);
+    transform: translateX(-4px);
+  }
+  30% {
+    filter: brightness(1) saturate(0.3);
+    transform: translateX(4px);
+  }
+  50% {
+    filter: brightness(2) saturate(0);
+    transform: translateX(-3px);
+  }
+  70% {
+    filter: brightness(1) saturate(0.5);
+    transform: translateX(2px);
+  }
+  100% {
+    filter: brightness(0.7) saturate(0.4);
+    transform: translateX(0);
+  }
 }
 .fighter.stunned {
   filter: brightness(0.7) saturate(0.4);
   animation: stunnedIdle 1s ease infinite alternate;
 }
 @keyframes stunnedIdle {
-  0% { transform: translateX(-2px); }
-  100% { transform: translateX(2px); }
+  0% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(2px);
+  }
 }
 .fighter.lifesteal-drain {
   animation: lsDrain 0.5s;
 }
 @keyframes lsDrain {
-  0% { filter: brightness(1); }
-  40% { filter: brightness(0.5) sepia(1); }
-  100% { filter: brightness(1); }
+  0% {
+    filter: brightness(1);
+  }
+  40% {
+    filter: brightness(0.5) sepia(1);
+  }
+  100% {
+    filter: brightness(1);
+  }
 }
 .fighter.lifesteal-heal {
   animation: lsHeal 0.5s;
 }
 @keyframes lsHeal {
-  0% { box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
-  50% { box-shadow: 0 0 40px rgba(220, 38, 38, 0.5); }
-  100% { box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
+  0% {
+    box-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(220, 38, 38, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
 }
 .fighter.shield-glow {
   animation: shieldUp 0.6s;
 }
 @keyframes shieldUp {
-  0% { box-shadow: 0 0 0 rgba(56, 189, 248, 0); }
-  50% { box-shadow: 0 0 50px rgba(56, 189, 248, 0.5), inset 0 0 20px rgba(56, 189, 248, 0.2); }
-  100% { box-shadow: 0 0 0 rgba(56, 189, 248, 0); }
+  0% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 50px rgba(56, 189, 248, 0.5),
+      inset 0 0 20px rgba(56, 189, 248, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
 }
 .fighter.shielded {
   box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
@@ -1708,17 +2072,32 @@ button:disabled {
   animation: shieldBreak 0.4s;
 }
 @keyframes shieldBreak {
-  0% { box-shadow: 0 0 18px rgba(56, 189, 248, 0.35); }
-  40% { box-shadow: 0 0 50px rgba(56, 189, 248, 0.6); }
-  100% { box-shadow: 0 0 0 transparent; }
+  0% {
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+  }
+  40% {
+    box-shadow: 0 0 50px rgba(56, 189, 248, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
 }
 .fighter.rage-aura {
   animation: rageFlare 0.7s;
 }
 @keyframes rageFlare {
-  0% { filter: brightness(1); box-shadow: 0 0 0 transparent; }
-  30% { filter: brightness(2) saturate(2); box-shadow: 0 0 60px rgba(239, 68, 68, 0.6); }
-  100% { filter: brightness(1.1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+  0% {
+    filter: brightness(1);
+    box-shadow: 0 0 0 transparent;
+  }
+  30% {
+    filter: brightness(2) saturate(2);
+    box-shadow: 0 0 60px rgba(239, 68, 68, 0.6);
+  }
+  100% {
+    filter: brightness(1.1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
 }
 .fighter.enraged {
   filter: brightness(1.1);
@@ -1726,77 +2105,164 @@ button:disabled {
   animation: enragedPulse 0.8s ease infinite alternate;
 }
 @keyframes enragedPulse {
-  0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-  100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.45); }
+  0% {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.45);
+  }
 }
 .fighter.dodge-sidestep {
   animation: dodgeSidestep 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes dodgeSidestep {
-  0% { transform: translateX(0) scale(1); filter: brightness(1); }
-  30% { transform: translateX(30px) scale(0.9); filter: brightness(1.5); opacity: 0.5; }
-  60% { transform: translateX(35px) scale(0.85); filter: brightness(1.3); opacity: 0.4; }
-  100% { transform: translateX(0) scale(1); filter: brightness(1); opacity: 1; }
+  0% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: translateX(30px) scale(0.9);
+    filter: brightness(1.5);
+    opacity: 0.5;
+  }
+  60% {
+    transform: translateX(35px) scale(0.85);
+    filter: brightness(1.3);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+    opacity: 1;
+  }
 }
 .fighter.dodge-sidestep-left {
   animation: dodgeSidestepLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes dodgeSidestepLeft {
-  0% { transform: translateX(0) scale(1); filter: brightness(1); }
-  30% { transform: translateX(-30px) scale(0.9); filter: brightness(1.5); opacity: 0.5; }
-  60% { transform: translateX(-35px) scale(0.85); filter: brightness(1.3); opacity: 0.4; }
-  100% { transform: translateX(0) scale(1); filter: brightness(1); opacity: 1; }
+  0% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: translateX(-30px) scale(0.9);
+    filter: brightness(1.5);
+    opacity: 0.5;
+  }
+  60% {
+    transform: translateX(-35px) scale(0.85);
+    filter: brightness(1.3);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+    opacity: 1;
+  }
 }
 .fighter.counter-parry {
   animation: counterParry 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes counterParry {
-  0% { transform: scale(1) rotate(0); filter: brightness(1); }
-  25% { transform: scale(1.15) rotate(-5deg); filter: brightness(2); box-shadow: 0 0 40px rgba(255, 102, 0, 0.5); }
-  50% { transform: scale(1.1) rotate(3deg); filter: brightness(1.5); }
-  100% { transform: scale(1) rotate(0); filter: brightness(1); }
+  0% {
+    transform: scale(1) rotate(0);
+    filter: brightness(1);
+  }
+  25% {
+    transform: scale(1.15) rotate(-5deg);
+    filter: brightness(2);
+    box-shadow: 0 0 40px rgba(255, 102, 0, 0.5);
+  }
+  50% {
+    transform: scale(1.1) rotate(3deg);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    filter: brightness(1);
+  }
 }
 .fighter.reflect-flash {
   animation: reflectFlash 0.5s;
 }
 @keyframes reflectFlash {
-  0% { filter: brightness(1); box-shadow: 0 0 0 transparent; }
-  30% { filter: brightness(2) hue-rotate(180deg); box-shadow: 0 0 50px rgba(96, 165, 250, 0.6); }
-  100% { filter: brightness(1); box-shadow: 0 0 0 transparent; }
+  0% {
+    filter: brightness(1);
+    box-shadow: 0 0 0 transparent;
+  }
+  30% {
+    filter: brightness(2) hue-rotate(180deg);
+    box-shadow: 0 0 50px rgba(96, 165, 250, 0.6);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 0 0 transparent;
+  }
 }
 .fighter.burn-pulse {
   animation: burnPulse 0.5s;
 }
 @keyframes burnPulse {
-  0% { filter: brightness(1); }
-  30% { filter: brightness(1.5) saturate(2); box-shadow: 0 0 40px rgba(251, 146, 60, 0.5); }
-  100% { filter: brightness(1); }
+  0% {
+    filter: brightness(1);
+  }
+  30% {
+    filter: brightness(1.5) saturate(2);
+    box-shadow: 0 0 40px rgba(251, 146, 60, 0.5);
+  }
+  100% {
+    filter: brightness(1);
+  }
 }
 .fighter.burning {
   box-shadow: 0 0 15px rgba(251, 146, 60, 0.25);
   animation: burningIdle 0.8s ease infinite alternate;
 }
 @keyframes burningIdle {
-  0% { box-shadow: 0 0 10px rgba(251, 146, 60, 0.15); }
-  100% { box-shadow: 0 0 25px rgba(251, 146, 60, 0.35); }
+  0% {
+    box-shadow: 0 0 10px rgba(251, 146, 60, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(251, 146, 60, 0.35);
+  }
 }
 .fighter.atk-miss {
   animation: atkMiss 0.5s;
 }
 @keyframes atkMiss {
-  0% { transform: translateX(0); }
-  30% { transform: translateX(25px); }
-  60% { transform: translateX(28px); opacity: 0.8; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(25px);
+  }
+  60% {
+    transform: translateX(28px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 .fighter.atk-miss-left {
   animation: atkMissLeft 0.5s;
 }
 @keyframes atkMissLeft {
-  0% { transform: translateX(0); }
-  30% { transform: translateX(-25px); }
-  60% { transform: translateX(-28px); opacity: 0.8; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-25px);
+  }
+  60% {
+    transform: translateX(-28px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 .fighter.ko-spin {
   animation: koSpin 1s forwards;
@@ -2394,8 +2860,16 @@ button:disabled {
   font-weight: 400;
 }
 @keyframes descSlide {
-  0% { opacity: 0; transform: translateY(-6px); max-height: 0; }
-  100% { opacity: 1; transform: translateY(0); max-height: 100px; }
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 100px;
+  }
 }
 .join-stat-label {
   font-family: var(--font-display);
@@ -2768,9 +3242,17 @@ button:disabled {
   font-size: 0.8rem;
 }
 @keyframes specBannerPop {
-  0% { opacity: 0; transform: scale(0.85) translateY(6px); }
-  60% { opacity: 1; transform: scale(1.04) translateY(-2px); }
-  100% { transform: scale(1) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
 }
 /* Zone colors — fighter A (cyan), fighter B (magenta), center (gold) */
 .spec-banner.spec-zone-a {
@@ -2791,24 +3273,88 @@ button:disabled {
   border: 1px solid rgba(255, 215, 0, 0.2);
 }
 /* Type accents */
-.spec-banner.spec-type-heal { color: var(--neon-green); background: rgba(57, 255, 20, 0.08); border-color: rgba(57, 255, 20, 0.25); }
-.spec-banner.spec-type-special { color: var(--gold); background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); animation: specBannerPop 0.35s ease-out, specGlow 1.2s ease infinite; }
-.spec-banner.spec-type-ko { color: var(--gold); background: rgba(255, 215, 0, 0.12); border-color: var(--gold); font-size: 0.95rem; animation: specBannerPop 0.35s ease-out, specGlow 0.8s ease infinite; }
-.spec-banner.spec-type-stun { color: #fbbf24; background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.25); }
-.spec-banner.spec-type-poison { color: #c084fc; background: rgba(192, 132, 252, 0.08); border-color: rgba(192, 132, 252, 0.25); }
-.spec-banner.spec-type-burn { color: #fb923c; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.25); }
-.spec-banner.spec-type-rage { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-.spec-banner.spec-type-lifesteal { color: #dc2626; background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.25); }
-.spec-banner.spec-type-shield { color: #38bdf8; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25); }
-.spec-banner.spec-type-dodge { color: #67e8f9; background: rgba(103, 232, 249, 0.06); border-color: rgba(103, 232, 249, 0.2); }
-.spec-banner.spec-type-crowdevent { color: var(--gold); background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); animation: specBannerPop 0.35s ease-out, specPulse 0.6s ease 2; }
+.spec-banner.spec-type-heal {
+  color: var(--neon-green);
+  background: rgba(57, 255, 20, 0.08);
+  border-color: rgba(57, 255, 20, 0.25);
+}
+.spec-banner.spec-type-special {
+  color: var(--gold);
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+  animation:
+    specBannerPop 0.35s ease-out,
+    specGlow 1.2s ease infinite;
+}
+.spec-banner.spec-type-ko {
+  color: var(--gold);
+  background: rgba(255, 215, 0, 0.12);
+  border-color: var(--gold);
+  font-size: 0.95rem;
+  animation:
+    specBannerPop 0.35s ease-out,
+    specGlow 0.8s ease infinite;
+}
+.spec-banner.spec-type-stun {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+.spec-banner.spec-type-poison {
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.08);
+  border-color: rgba(192, 132, 252, 0.25);
+}
+.spec-banner.spec-type-burn {
+  color: #fb923c;
+  background: rgba(251, 146, 60, 0.08);
+  border-color: rgba(251, 146, 60, 0.25);
+}
+.spec-banner.spec-type-rage {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.spec-banner.spec-type-lifesteal {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+.spec-banner.spec-type-shield {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+.spec-banner.spec-type-dodge {
+  color: #67e8f9;
+  background: rgba(103, 232, 249, 0.06);
+  border-color: rgba(103, 232, 249, 0.2);
+}
+.spec-banner.spec-type-crowdevent {
+  color: var(--gold);
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+  animation:
+    specBannerPop 0.35s ease-out,
+    specPulse 0.6s ease 2;
+}
 @keyframes specGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.1); }
-  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.3); }
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.3);
+  }
 }
 @keyframes specPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
 }
 
 /* ── Spec Log ── */
@@ -2839,21 +3385,53 @@ button:disabled {
   flex-shrink: 0;
 }
 @keyframes specLogSlide {
-  0% { opacity: 0; transform: translateX(-8px); }
-  100% { opacity: 1; transform: translateX(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 /* Log zone colors */
-.spec-log-line.spec-log-a { color: var(--cyan); border-left: 2px solid var(--cyan); padding-left: 6px; }
-.spec-log-line.spec-log-b { color: var(--magenta); border-left: 2px solid var(--magenta); padding-left: 6px; }
-.spec-log-line.spec-log-center { color: var(--gold); }
+.spec-log-line.spec-log-a {
+  color: var(--cyan);
+  border-left: 2px solid var(--cyan);
+  padding-left: 6px;
+}
+.spec-log-line.spec-log-b {
+  color: var(--magenta);
+  border-left: 2px solid var(--magenta);
+  padding-left: 6px;
+}
+.spec-log-line.spec-log-center {
+  color: var(--gold);
+}
 /* Log type highlights */
-.spec-log-line.spec-log-type-heal { color: var(--neon-green); }
-.spec-log-line.spec-log-type-special { color: var(--gold); font-weight: 600; }
-.spec-log-line.spec-log-type-ko { color: var(--gold); font-weight: 800; }
-.spec-log-line.spec-log-type-stun { color: #fbbf24; }
-.spec-log-line.spec-log-type-rage { color: #ef4444; }
-.spec-log-line.spec-log-type-poison { color: #c084fc; }
-.spec-log-line.spec-log-type-burn { color: #fb923c; }
+.spec-log-line.spec-log-type-heal {
+  color: var(--neon-green);
+}
+.spec-log-line.spec-log-type-special {
+  color: var(--gold);
+  font-weight: 600;
+}
+.spec-log-line.spec-log-type-ko {
+  color: var(--gold);
+  font-weight: 800;
+}
+.spec-log-line.spec-log-type-stun {
+  color: #fbbf24;
+}
+.spec-log-line.spec-log-type-rage {
+  color: #ef4444;
+}
+.spec-log-line.spec-log-type-poison {
+  color: #c084fc;
+}
+.spec-log-line.spec-log-type-burn {
+  color: #fb923c;
+}
 
 /* ── Betting UI ── */
 .spec-bet-panel {
@@ -3041,5 +3619,572 @@ button:disabled {
   .spec-banner {
     font-size: 0.9rem;
     padding: 10px 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   BET PAGE STYLES
+   ═══════════════════════════════════════════════════ */
+
+/* Waiting screen */
+.bet-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+}
+.bet-logo {
+  font-size: 4rem;
+  animation: betLogoPulse 2s ease infinite;
+}
+@keyframes betLogoPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.3);
+  }
+}
+.bet-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+.bet-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.bet-pulse-ring {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  animation: betRingPulse 1.5s ease infinite;
+  opacity: 0.4;
+  margin-top: 10px;
+}
+@keyframes betRingPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Bet card container */
+.bet-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  width: 100%;
+  max-width: 500px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: phaseIn 0.4s ease;
+  overflow-y: auto;
+  max-height: 95vh;
+}
+
+/* Header */
+.bet-header {
+  text-align: center;
+  padding: 8px 0;
+}
+.bet-header-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 6px;
+}
+.bet-header-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  margin: 0;
+}
+.bet-header-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Fighter grid for champion betting */
+.bet-fighter-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bet-fighter-cell {
+  animation: phaseIn 0.3s ease;
+}
+.bet-fighter-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  text-align: left;
+}
+.bet-fighter-btn:hover {
+  border-color: var(--gold);
+  background: rgba(255, 215, 0, 0.06);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.1);
+}
+.bet-fighter-btn.expanded {
+  border-color: var(--cyan);
+  background: rgba(0, 240, 255, 0.06);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.bet-fighter-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.bet-fighter-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  flex: 1;
+}
+
+/* Stats panel */
+.bet-fighter-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  animation: descSlide 0.2s ease;
+}
+.bet-stat-row {
+  display: grid;
+  grid-template-columns: 22px 52px 1fr 28px;
+  gap: 4px;
+  align-items: center;
+  font-size: 0.65rem;
+}
+.bet-stat-icon {
+  font-size: 0.75rem;
+  text-align: center;
+}
+.bet-stat-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.bet-stat-bar-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bet-stat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.bet-stat-val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-align: right;
+  color: var(--text);
+  font-size: 0.65rem;
+}
+
+/* Lock bet button */
+.bet-lock-btn {
+  margin-top: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15),
+    rgba(255, 215, 0, 0.05)
+  );
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  width: 100%;
+}
+.bet-lock-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.25),
+    rgba(255, 215, 0, 0.1)
+  );
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  transform: scale(1.02);
+}
+.bet-lock-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Live betting layout ── */
+.bet-live {
+  gap: 8px;
+}
+.bet-champ-badge {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  padding: 6px 12px;
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 8px;
+}
+.bet-score-bar {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--cyan);
+  padding: 4px 10px;
+  background: rgba(0, 240, 255, 0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.1);
+}
+
+/* Per-fight bet panel */
+.bet-fight-panel {
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  animation: specBannerPop 0.35s ease-out;
+}
+.bet-fight-title {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--gold);
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.bet-countdown {
+  color: #ef4444;
+  animation: betCountdownPulse 1s ease infinite;
+}
+@keyframes betCountdownPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.bet-fight-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.bet-fight-pick {
+  padding: 10px 8px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: var(--text);
+}
+.bet-pick-a {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+.bet-pick-a:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.2);
+  transform: scale(1.03);
+}
+.bet-pick-b {
+  background: rgba(255, 0, 229, 0.08);
+  border: 1px solid rgba(255, 0, 229, 0.3);
+}
+.bet-pick-b:hover {
+  background: rgba(255, 0, 229, 0.15);
+  box-shadow: 0 0 14px rgba(255, 0, 229, 0.2);
+  transform: scale(1.03);
+}
+.bet-fight-pick:active {
+  transform: scale(0.96);
+}
+
+/* Active/result badges */
+.bet-fight-active {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cyan);
+  padding: 8px;
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  animation: specBannerPop 0.3s ease-out;
+}
+.bet-fight-result {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 10px;
+  border-radius: 8px;
+  animation: specBannerPop 0.3s ease-out;
+  letter-spacing: 1px;
+}
+.bet-fight-result.bet-win {
+  color: var(--neon-green);
+  background: rgba(57, 255, 20, 0.08);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+}
+.bet-fight-result.bet-lose {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Selected fighter highlight */
+.spec-fighter.bet-selected {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.2);
+}
+
+/* Between matches */
+.bet-between {
+  text-align: center;
+  padding: 20px 0;
+}
+.bet-between-icon {
+  font-size: 2rem;
+  animation: betLogoPulse 2s ease infinite;
+}
+.bet-between-text {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  margin: 8px 0 16px;
+}
+.bet-survivors-label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.bet-survivors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.bet-survivor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--text);
+}
+.bet-survivor-wins {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
+  font-size: 0.6rem;
+}
+
+/* ── Done / Champion result ── */
+.bet-done {
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.bet-champ-crown {
+  font-size: 3rem;
+  animation: betLogoPulse 2s ease infinite;
+}
+.bet-champ-emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+.bet-champ-name {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+.bet-champ-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+.bet-result-card {
+  padding: 14px;
+  border-radius: 10px;
+  width: 100%;
+  animation: specBannerPop 0.4s ease-out;
+}
+.bet-result-card.bet-win {
+  background: rgba(57, 255, 20, 0.08);
+  border: 2px solid rgba(57, 255, 20, 0.3);
+}
+.bet-result-card.bet-lose {
+  background: rgba(239, 68, 68, 0.08);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+}
+.bet-result-badge {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.bet-result-card.bet-win .bet-result-badge {
+  color: var(--neon-green);
+}
+.bet-result-card.bet-lose .bet-result-badge {
+  color: #ef4444;
+}
+.bet-result-pick {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.bet-score-final {
+  padding: 12px;
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 10px;
+  width: 100%;
+}
+.bet-score-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  margin-bottom: 4px;
+}
+.bet-score-val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--text);
+}
+.bet-score-pct {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Bet QR overlay on main battle screen ── */
+.bet-qr-float {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+.bet-qr-float:hover {
+  opacity: 1;
+}
+.bet-qr-float svg {
+  border-radius: 4px;
+}
+.bet-qr-label {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+@media (max-width: 480px) {
+  .bet-card {
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .bet-fighter-emoji {
+    font-size: 1.3rem;
+  }
+  .bet-header-title {
+    font-size: 1rem;
+  }
+  .bet-stat-row {
+    grid-template-columns: 18px 44px 1fr 24px;
+  }
+  .bet-champ-name {
+    font-size: 1.1rem;
   }
 }

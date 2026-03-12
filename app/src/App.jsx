@@ -221,10 +221,8 @@ function App() {
     [stopAutoRun],
   );
 
-  // ── WebSocket connection for QR mode ──
-  // Keep alive for entire session (setup + battle + done) so fight events broadcast
+  // ── WebSocket connection — always on so /bet spectators work in any mode ──
   useEffect(() => {
-    if (setupMode !== "qr") return;
     const ws = new WebSocket(getWsUrl());
     hostWsRef.current = ws;
     ws.onopen = () => ws.send(JSON.stringify({ type: "registerHost" }));
@@ -249,7 +247,7 @@ function App() {
       ws.close();
       hostWsRef.current = null;
     };
-  }, [setupMode]);
+  }, []);
 
   const removeLobbyPlayer = useCallback((playerId) => {
     setLobbyPlayers((prev) => prev.filter((p) => p.id !== playerId));
@@ -266,7 +264,19 @@ function App() {
       id: crypto.randomUUID(),
       name: manualAddName.trim(),
       emoji: getEmoji(manualAddName.trim()),
-      stats: { power: 5, speed: 5, hype: 5, chaos: 5, luck: 5, defense: 5, focus: 5, stamina: 5, wit: 5, grit: 5, swagger: 5 },
+      stats: {
+        power: 5,
+        speed: 5,
+        hype: 5,
+        chaos: 5,
+        luck: 5,
+        defense: 5,
+        focus: 5,
+        stamina: 5,
+        wit: 5,
+        grit: 5,
+        swagger: 5,
+      },
       manual: true,
     };
     setLobbyPlayers((prev) => [...prev, p]);
@@ -289,13 +299,6 @@ function App() {
           emoji: p.emoji,
         })),
       );
-      // Notify players game started (include fighter list for betting)
-      if (hostWsRef.current && hostWsRef.current.readyState === 1) {
-        hostWsRef.current.send(JSON.stringify({
-          type: "gameStarted",
-          fighters: built.map((f) => ({ name: f.name, emoji: f.emoji })),
-        }));
-      }
     } else {
       const names = normalizeNames(input);
       if (names.length < 2) {
@@ -303,6 +306,19 @@ function App() {
         return;
       }
       built = buildFighterObjects(names);
+    }
+    // Broadcast fighter list for /bet spectators (works in both modes)
+    if (hostWsRef.current && hostWsRef.current.readyState === 1) {
+      hostWsRef.current.send(
+        JSON.stringify({
+          type: "gameStarted",
+          fighters: built.map((f) => ({
+            name: f.name,
+            emoji: f.emoji,
+            stats: f.stats,
+          })),
+        }),
+      );
     }
     stopAutoRun();
     setAllFighters(built);
@@ -780,6 +796,18 @@ function App() {
 
             {/* Action Banner Stage — now at bottom */}
             <div className="banner-stage" ref={bannerStageRef} />
+          </div>
+
+          {/* Bet QR overlay */}
+          <div className="bet-qr-float">
+            <QRCodeSVG
+              value={`${window.location.origin}/bet`}
+              size={64}
+              bgColor="#ffffff"
+              fgColor="#0a0a12"
+              level="L"
+            />
+            <span className="bet-qr-label">Bet Here</span>
           </div>
 
           {/* Battle Controls */}

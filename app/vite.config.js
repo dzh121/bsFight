@@ -9,6 +9,10 @@ function gameWsPlugin() {
     configureServer(server) {
       const players = new Map();
       let hostWs = null;
+      let lastGameStarted = null;
+      let currentMatch = null;
+      let lastTournamentEnd = null;
+      let fightInProgress = false;
 
       const wss = new WebSocketServer({ noServer: true });
 
@@ -58,6 +62,10 @@ function gameWsPlugin() {
 
           if (msg.type === "resetRoom") {
             players.clear();
+            lastGameStarted = null;
+            currentMatch = null;
+            lastTournamentEnd = null;
+            fightInProgress = false;
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
                 c.send(JSON.stringify({ type: "roomReset" }));
@@ -65,15 +73,52 @@ function gameWsPlugin() {
             });
           }
 
+          if (msg.type === "betSpectator") {
+            ws.isBetSpectator = true;
+            if (lastGameStarted) {
+              ws.send(JSON.stringify(lastGameStarted));
+            }
+            if (lastTournamentEnd) {
+              ws.send(JSON.stringify(lastTournamentEnd));
+            } else if (currentMatch) {
+              ws.send(
+                JSON.stringify({ type: "fightEvent", data: currentMatch }),
+              );
+              if (fightInProgress) {
+                ws.send(
+                  JSON.stringify({
+                    type: "fightEvent",
+                    data: { event: "fightInProgress" },
+                  }),
+                );
+              }
+            }
+          }
+
           if (msg.type === "gameStarted") {
+            lastGameStarted = { type: "gameStarted", fighters: msg.fighters };
+            currentMatch = null;
+            lastTournamentEnd = null;
+            fightInProgress = false;
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
-                c.send(JSON.stringify({ type: "gameStarted", fighters: msg.fighters }));
+                c.send(JSON.stringify(lastGameStarted));
               }
             });
           }
 
           if (msg.type === "fightEvent") {
+            if (msg.data && msg.data.event === "matchStart") {
+              currentMatch = msg.data;
+              fightInProgress = false;
+            }
+            if (msg.data && msg.data.event === "action") {
+              fightInProgress = true;
+            }
+            if (msg.data && msg.data.event === "matchEnd") {
+              currentMatch = null;
+              fightInProgress = false;
+            }
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
                 c.send(JSON.stringify({ type: "fightEvent", data: msg.data }));
@@ -82,11 +127,12 @@ function gameWsPlugin() {
           }
 
           if (msg.type === "tournamentEnd") {
+            lastTournamentEnd = { type: "tournamentEnd", data: msg.data };
+            currentMatch = null;
+            fightInProgress = false;
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
-                c.send(
-                  JSON.stringify({ type: "tournamentEnd", data: msg.data }),
-                );
+                c.send(JSON.stringify(lastTournamentEnd));
               }
             });
           }
