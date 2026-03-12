@@ -19,6 +19,7 @@ import {
   updateNrgBar,
 } from "./utils/battleEngine";
 import { playSound } from "./utils/soundEngine";
+import { npcAutoSelect as npcAutoSelectFn } from "./utils/actionGenerator.js";
 
 function scaleStats(qrStats) {
   const scaled = {};
@@ -75,6 +76,7 @@ function App() {
   const [lobbyPlayers, setLobbyPlayers] = useState([]);
   const [manualAddName, setManualAddName] = useState("");
   const hostWsRef = useRef(null);
+  const pendingActionRef = useRef(null); // { resolve, timer } for current turn input
 
   const roundRef = useRef({
     current: [],
@@ -242,6 +244,23 @@ function App() {
       if (msg.type === "playerList") {
         setLobbyPlayers(msg.players);
       }
+      // Player-controlled turn: relay player's chosen action to pending resolver
+      if (msg.type === "playerAction" && pendingActionRef.current) {
+        const pa = pendingActionRef.current;
+        if (pa.playerId === msg.playerId) {
+          clearTimeout(pa.timer);
+          pendingActionRef.current = null;
+          pa.resolve(msg.actionId);
+        }
+      }
+      if (msg.type === "playerDisconnected" && pendingActionRef.current) {
+        const pa = pendingActionRef.current;
+        if (pa.playerId === msg.playerId) {
+          clearTimeout(pa.timer);
+          pendingActionRef.current = null;
+          pa.resolve(null); // null = auto-select
+        }
+      }
     };
     return () => {
       ws.close();
@@ -297,6 +316,7 @@ function App() {
           wins: 0,
           stats: scaleStats(p.stats),
           emoji: p.emoji,
+          playerId: p.id, // preserve for player-controlled turns
         })),
       );
     } else {
@@ -355,11 +375,72 @@ function App() {
         ws.send(JSON.stringify({ type: "fightEvent", data }));
       }
     };
+
+    // Action resolver: sends options to player phones, waits for response
+    const TURN_TIMEOUT_MS = 12000;
+    const actionResolver = async (fighter, isA, options, battleState) => {
+      const ws = hostWsRef.current;
+      const pid = fighter.playerId;
+
+      // NPC fighter or no WS — auto-select
+      if (!pid || !ws || ws.readyState !== 1) {
+        await new Promise((r) => setTimeout(r, 400));
+        return npcAutoSelectFn(options, battleState);
+      }
+
+      // Notify the other player to wait
+      const otherFighter = isA ? currentPair[1] : currentPair[0];
+      if (otherFighter.playerId) {
+        ws.send(JSON.stringify({
+          type: "targetPlayer",
+          playerId: otherFighter.playerId,
+          payload: { type: "waitTurn" },
+        }));
+      }
+
+      // Send options to this player's phone
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          pendingActionRef.current = null;
+          // Notify player their turn was skipped
+          ws.send(JSON.stringify({
+            type: "targetPlayer",
+            playerId: pid,
+            payload: { type: "turnSkipped", reason: "timeout" },
+          }));
+          resolve(null); // null = auto-select fallback
+        }, TURN_TIMEOUT_MS);
+
+        pendingActionRef.current = { resolve, timer, playerId: pid };
+
+        ws.send(JSON.stringify({
+          type: "targetPlayer",
+          playerId: pid,
+          payload: {
+            type: "yourTurn",
+            options,
+            battleState: {
+              hp: battleState.hp,
+              maxHp: battleState.maxHp,
+              nrg: battleState.nrg,
+              maxNrg: battleState.maxNrg,
+              enemyHp: battleState.enemyHp,
+            },
+            turnTimer: Math.round(TURN_TIMEOUT_MS / 1000),
+          },
+        }));
+      });
+    };
+
+    // Determine if either fighter is player-controlled
+    const hasPlayers = currentPair[0].playerId || currentPair[1].playerId;
+
     const result = await animatedFight(
       currentPair[0],
       currentPair[1],
       refs,
       broadcastEvent,
+      hasPlayers ? actionResolver : null,
     );
     result.winner.wins++;
     const newElim = new Set(eliminated);
