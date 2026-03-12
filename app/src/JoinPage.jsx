@@ -81,11 +81,6 @@ const EMOJI_OPTIONS = [
   "🃏",
 ];
 
-function getWsUrl() {
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/game-ws`;
-}
-
 export default function JoinPage() {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("😎");

@@ -20,6 +20,8 @@ import {
 } from "./utils/battleEngine";
 import { playSound } from "./utils/soundEngine";
 import { npcAutoSelect as npcAutoSelectFn } from "./utils/actionGenerator.js";
+import { getWsUrl } from "./utils/wsConnection";
+import { getBaseUrl } from "./utils/networkHelper";
 
 function scaleStats(qrStats) {
   const scaled = {};
@@ -29,10 +31,6 @@ function scaleStats(qrStats) {
   return scaled;
 }
 
-function getWsUrl() {
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/game-ws`;
-}
 
 const SAMPLE_PEOPLE = [
   "Daniel",
@@ -70,6 +68,7 @@ function App() {
   const [isBusy, setIsBusy] = useState(false);
   const [champion, setChampion] = useState(null);
   const [showLog, setShowLog] = useState(false);
+  const [qrBaseUrl, setQrBaseUrl] = useState(window.location.origin);
 
   // QR mode state
   const [setupMode, setSetupMode] = useState("manual"); // manual | qr
@@ -222,6 +221,11 @@ function App() {
     },
     [stopAutoRun],
   );
+
+  // ── Get base URL for QR codes ──
+  useEffect(() => {
+    getBaseUrl().then(setQrBaseUrl);
+  }, []);
 
   // ── WebSocket connection — always on so /bet spectators work in any mode ──
   useEffect(() => {
@@ -678,13 +682,13 @@ function App() {
                 {/* QR Code */}
                 <div className="qr-section">
                   <QRCodeSVG
-                    value={`${window.location.origin}/join`}
+                    value={`${qrBaseUrl}/join`}
                     size={180}
                     bgColor="#ffffff"
                     fgColor="#0a0a12"
                     level="M"
                   />
-                  <div className="qr-url">{window.location.origin}/join</div>
+                  <div className="qr-url">{qrBaseUrl}/join</div>
                 </div>
 
                 {/* Player Lobby */}
@@ -889,7 +893,7 @@ function App() {
           {/* Bet QR overlay */}
           <div className="bet-qr-float">
             <QRCodeSVG
-              value={`${window.location.origin}/bet`}
+              value={`${qrBaseUrl}/bet`}
               size={64}
               bgColor="#ffffff"
               fgColor="#0a0a12"
