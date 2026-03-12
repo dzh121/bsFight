@@ -2387,10 +2387,9 @@ button:disabled {
   }
 }
 
-/* Status icon */
+/* Status icons — multiple stack vertically */
 .status-icon {
   position: absolute;
-  top: 6px;
   right: 6px;
   font-size: 1.2rem;
   animation: sbob 1s ease infinite;
@@ -3594,7 +3593,8 @@ button:disabled {
 }
 
 /* ── Spectator full-screen layout ── */
-.join-page:has(.spec-card) {
+.join-page:has(.spec-card),
+.join-page:has(.bet-live) {
   padding: 8px;
   flex-direction: column;
   align-items: stretch;
@@ -3602,10 +3602,12 @@ button:disabled {
 }
 /* PC/tablet: constrain width for readability */
 @media (min-width: 768px) {
-  .join-page:has(.spec-card) {
+  .join-page:has(.spec-card),
+  .join-page:has(.bet-live) {
     padding: 16px;
   }
-  .spec-card {
+  .spec-card,
+  .bet-card.bet-live {
     max-width: 600px;
     margin: 0 auto;
     border-radius: 16px;
@@ -3765,9 +3767,111 @@ button:disabled {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
+
+/* Row layout: info-btn + pick-btn side by side */
+.bet-fighter-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+.bet-fighter-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.bet-fighter-info-btn {
+  width: 100%;
+  flex: unset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  text-align: left;
+  min-width: 0;
+}
+.bet-fighter-info-btn:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: rgba(255, 215, 0, 0.05);
+}
+.bet-fighter-info-btn.expanded {
+  border-color: var(--cyan);
+  background: rgba(0, 240, 255, 0.06);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.bet-info-chevron {
+  margin-left: auto;
+  font-size: 0.55rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  padding-left: 4px;
+}
+.bet-pick-btn {
+  padding: 0 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(57, 255, 20, 0.15),
+    rgba(57, 255, 20, 0.05)
+  );
+  border: 1px solid rgba(57, 255, 20, 0.45);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--neon-green);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 42px;
+}
+.bet-pick-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(57, 255, 20, 0.28),
+    rgba(57, 255, 20, 0.1)
+  );
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.25);
+  transform: scale(1.04);
+}
+.bet-pick-btn:active {
+  transform: scale(0.95);
+}
+
+/* Skip / spectate button (subtle) */
+.bet-skip-btn {
+  margin-top: 4px;
+  padding: 9px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+.bet-skip-btn:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
 .bet-fighter-emoji {
   font-size: 1.6rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 .bet-fighter-name {
   font-family: var(--font-display);
@@ -3775,6 +3879,10 @@ button:disabled {
   font-weight: 700;
   letter-spacing: 1px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Stats panel */
@@ -3864,6 +3972,28 @@ button:disabled {
 /* ── Live betting layout ── */
 .bet-live {
   gap: 8px;
+  max-height: 100vh;
+  max-width: none;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.bet-live .spec-fighters {
+  flex-shrink: 0;
+}
+.bet-live .spec-log {
+  flex: 1;
+  min-height: 60px;
+  overflow-y: auto;
+}
+.bet-live .bet-fight-panel,
+.bet-live .bet-fight-active,
+.bet-live .bet-fight-result {
+  flex-shrink: 0;
+}
+.bet-live .bet-champ-badge,
+.bet-live .bet-score-bar {
+  flex-shrink: 0;
 }
 .bet-champ-badge {
   text-align: center;
@@ -3912,6 +4042,10 @@ button:disabled {
   color: #ef4444;
   animation: betCountdownPulse 1s ease infinite;
 }
+.bet-countdown.urgent {
+  animation: betCountdownUrgent 0.4s ease infinite;
+  font-weight: 900;
+}
 @keyframes betCountdownPulse {
   0%,
   100% {
@@ -3919,6 +4053,19 @@ button:disabled {
   }
   50% {
     opacity: 0.5;
+  }
+}
+@keyframes betCountdownUrgent {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    color: #ef4444;
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+    color: #ff2222;
   }
 }
 .bet-fight-btns {

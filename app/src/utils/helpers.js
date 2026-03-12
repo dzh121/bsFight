@@ -378,6 +378,7 @@ export function buildFighterObjects(names) {
   return shuffle(names).map((name) => ({
     name,
     wins: 0,
+    emoji: getEmoji(name),
     stats: generateBalancedStats(),
   }));
 }

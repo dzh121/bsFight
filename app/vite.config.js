@@ -13,6 +13,7 @@ function gameWsPlugin() {
       let currentMatch = null;
       let lastTournamentEnd = null;
       let fightInProgress = false;
+      let lastElimination = null;
 
       const wss = new WebSocketServer({ noServer: true });
 
@@ -66,6 +67,7 @@ function gameWsPlugin() {
             currentMatch = null;
             lastTournamentEnd = null;
             fightInProgress = false;
+            lastElimination = null;
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
                 c.send(JSON.stringify({ type: "roomReset" }));
@@ -92,6 +94,14 @@ function gameWsPlugin() {
                   }),
                 );
               }
+            } else if (lastElimination) {
+              // Joined between matches — push into live mode with current survivors
+              ws.send(
+                JSON.stringify({
+                  type: "fightEvent",
+                  data: { event: "tournamentInProgress", ...lastElimination },
+                }),
+              );
             }
           }
 
@@ -100,6 +110,7 @@ function gameWsPlugin() {
             currentMatch = null;
             lastTournamentEnd = null;
             fightInProgress = false;
+            lastElimination = null;
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {
                 c.send(JSON.stringify(lastGameStarted));
@@ -118,6 +129,9 @@ function gameWsPlugin() {
             if (msg.data && msg.data.event === "matchEnd") {
               currentMatch = null;
               fightInProgress = false;
+            }
+            if (msg.data && msg.data.event === "elimination") {
+              lastElimination = msg.data;
             }
             wss.clients.forEach((c) => {
               if (c !== ws && c.readyState === 1) {

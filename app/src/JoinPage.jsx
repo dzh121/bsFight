@@ -108,6 +108,7 @@ export default function JoinPage() {
   const [betLocked, setBetLocked] = useState(false);
   const bannerKeyRef = useRef(0);
   const betRef = useRef(null);
+  const matchClearTimerRef = useRef(null);
 
   const usedPoints = Object.values(stats).reduce((a, b) => a + b, 0);
   const remaining = TOTAL_BUDGET - usedPoints;
@@ -128,6 +129,7 @@ export default function JoinPage() {
   useEffect(() => {
     return () => {
       if (wsRef.current) wsRef.current.close();
+      if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
     };
   }, []);
 
@@ -149,6 +151,7 @@ export default function JoinPage() {
         setStatus("started");
         setAmEliminated(false);
         setBet(null);
+        betRef.current = null;
         setBetWins(0);
         setBetLocked(false);
         if (msg.fighters) setSurvivors(msg.fighters);
@@ -158,6 +161,10 @@ export default function JoinPage() {
       if (msg.type === "fightEvent") {
         const d = msg.data;
         if (d.event === "matchStart") {
+          if (matchClearTimerRef.current) {
+            clearTimeout(matchClearTimerRef.current);
+            matchClearTimerRef.current = null;
+          }
           setMatch({
             f1: d.f1,
             f2: d.f2,
@@ -216,6 +223,9 @@ export default function JoinPage() {
           if (d.loser.name === myName) {
             setAmEliminated(true);
           }
+          // Clear match after delay to show between-matches waiting screen
+          if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
+          matchClearTimerRef.current = setTimeout(() => setMatch(null), 2800);
           // Track bet wins via ref (avoids stale closure)
           const currentBet = betRef.current;
           if (currentBet) {

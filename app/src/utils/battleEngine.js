@@ -72,14 +72,30 @@ function showPopup(el, text, cls = "") {
   setTimeout(() => d.remove(), 800);
 }
 
-function setStatus(el, icon) {
+function setStatus(el, icon, statusType) {
   if (!el) return;
-  el.querySelectorAll(".status-icon").forEach((s) => s.remove());
-  if (!icon) return;
+  if (!icon) {
+    // Remove only the specific status type, or all if no type given
+    if (statusType) {
+      el.querySelectorAll(`.status-icon[data-status="${statusType}"]`).forEach((s) => s.remove());
+    } else {
+      el.querySelectorAll(".status-icon").forEach((s) => s.remove());
+    }
+    // Re-stack remaining icons
+    el.querySelectorAll(".status-icon").forEach((s, i) => { s.style.top = (6 + i * 22) + "px"; });
+    return;
+  }
+  // Remove existing icon of same type before adding
+  if (statusType) {
+    el.querySelectorAll(`.status-icon[data-status="${statusType}"]`).forEach((s) => s.remove());
+  }
   const s = document.createElement("div");
   s.className = "status-icon";
+  if (statusType) s.dataset.status = statusType;
   s.textContent = icon;
   el.appendChild(s);
+  // Position all icons with proper stacking
+  el.querySelectorAll(".status-icon").forEach((si, i) => { si.style.top = (6 + i * 22) + "px"; });
 }
 
 function applyAnim(el, cls, dur = 400) {
@@ -396,7 +412,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     const makeIcons = (poison, stun, shield, rage, reflect, burn, intimidate, sabotage, momentum) => {
       let html = "";
       if (shield > 0) html += `<span class="buff-icon buff-shield">🛡️ ${shield}hp</span>`;
-      if (rage > 0) html += `<span class="buff-icon buff-rage">🔥 ${rage}t</span>`;
+      if (rage > 0) html += `<span class="buff-icon buff-rage">� ${rage}t</span>`;
       if (reflect > 0) html += `<span class="buff-icon buff-reflect">🪞 ${reflect}t</span>`;
       if (poison > 0) html += `<span class="buff-icon buff-poison">☠️ ${poison}t</span>`;
       if (burn > 0) html += `<span class="buff-icon buff-burn">🔥 ${burn}t</span>`;
@@ -440,6 +456,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     momentum2 = 0;
   let nextDouble1 = false,
     nextDouble2 = false;
+  let taunt1 = false,
+    taunt2 = false;
+  let secondWind1 = false,
+    secondWind2 = false;
+  let endure1 = false,
+    endure2 = false;
   const maxTurns = rand(12, 18);
   let turn = 0;
   let suddenDeath = false;
@@ -540,6 +562,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if (isA) stun1 = false;
       else stun2 = false;
       aEl.classList.remove("stunned");
+      setStatus(aEl, null, "stun");
       banner(
         isA ? "a" : "b",
         `😵 Still stunned... <b>[skip]</b>`,
@@ -566,7 +589,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       else rage2--;
       if ((isA ? rage1 : rage2) <= 0) {
         aEl.classList.remove("enraged");
-        setStatus(aEl, null);
+        setStatus(aEl, null, "rage");
         addLog(battleLogBody, "🧊", `${atk.name}'s rage has faded.`, "crowd");
       }
     }
@@ -577,6 +600,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if (isA) reflect1--;
       else reflect2--;
       if ((isA ? reflect1 : reflect2) <= 0) {
+        setStatus(aEl, null, "reflect");
         addLog(battleLogBody, "🪞", `${atk.name}'s reflect faded.`, "crowd");
       }
     }
@@ -593,13 +617,6 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       }
     }
 
-    // Intimidate tick
-    const myIntimidate = isA ? intimidate1 : intimidate2;
-    if (myIntimidate > 0) {
-      if (isA) intimidate1--;
-      else intimidate2--;
-    }
-
     // Poison tick (reduced by defense + grit)
     const myPoison = isA ? poison1 : poison2;
     if (myPoison > 0) {
@@ -614,6 +631,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         poison2--;
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
       }
+      if ((isA ? poison1 : poison2) <= 0) setStatus(aEl, null, "poison");
       applyAnim(aEl, "poison-pulse", 500);
       banner(
         isA ? "a" : "b",
@@ -639,12 +657,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         hp1 = Math.max(0, hp1 - bd);
         burn1--;
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
-        if (burn1 <= 0) aEl.classList.remove("burning");
+        if (burn1 <= 0) { aEl.classList.remove("burning"); setStatus(aEl, null, "burn"); }
       } else {
         hp2 = Math.max(0, hp2 - bd);
         burn2--;
         updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
-        if (burn2 <= 0) aEl.classList.remove("burning");
+        if (burn2 <= 0) { aEl.classList.remove("burning"); setStatus(aEl, null, "burn"); }
       }
       applyAnim(aEl, "burn-pulse", 500);
       banner(
@@ -676,9 +694,20 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     const roll = Math.random() * 100;
     const myNrg = isA ? nrg1 : nrg2;
     const myHp = isA ? hp1 : hp2;
+    const defHp = isA ? hp2 : hp1;
 
+    // Taunt enforcement — taunted fighters can only dodge or normal attack
+    const isTaunted = isA ? taunt1 : taunt2;
+    if (isTaunted) {
+      if (isA) taunt1 = false; else taunt2 = false;
+      banner(isA ? "a" : "b", `😏 ${atk.name} is taunted! Limited actions!`, "intimidate");
+      addLog(battleLogBody, "😏", `${atk.name} is <b>TAUNTED</b> — can only dodge or basic attack!`, "intimidate");
+      await delay(400);
+    }
+
+    if (!isTaunted) {
     // SPECIAL MOVE
-    if (myNrg >= 60 && roll < 20 + aS.focus / 20) {
+    if (myNrg >= 60 && roll < 20 + aS.focus / 18) {
       updateTurnLabel(aEl, "⚡ SPECIAL MOVE");
       if (isA) nrg1 -= 60;
       else nrg2 -= 60;
@@ -687,8 +716,8 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         isA ? nrgTextA : nrgTextB,
         isA ? nrg1 : nrg2,
       );
-      const rawDmg = rand(14, 22) + aS.power / 8 + aS.focus / 20;
-      const dmg = Math.round(Math.max(5, rawDmg - dS.defense / 8));
+      const rawDmg = rand(14, 22) + aS.power / 14 + aS.focus / 12;
+      const dmg = Math.round(Math.max(5, rawDmg - dS.defense / 7));
       banner(
         isA ? "a" : "b",
         `⚡ Charging energy...`,
@@ -766,9 +795,9 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // HEAL (luck triggers, stamina+grit boost amount, swagger of enemy reduces it)
     if (myHp < 60 && roll < 22 + aS.luck / 6) {
       updateTurnLabel(aEl, "💚 HEALING");
-      const staminaBonus = Math.round(aS.stamina / 12);
-      const gritBonus = myHp < 30 ? Math.round(aS.grit / 18) : 0;
-      const swaggerPenalty = Math.round(dS.swagger / 30);
+      const staminaBonus = Math.round(aS.stamina / 6);
+      const gritBonus = myHp < 30 ? Math.round(aS.grit / 14) : 0;
+      const swaggerPenalty = Math.round(dS.swagger / 20);
       const heal = Math.max(5, rand(8, 16) + staminaBonus + gritBonus - swaggerPenalty);
       banner(
         isA ? "a" : "b",
@@ -809,7 +838,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // BUFF
-    if (roll > 88 && aS.hype > 35) {
+    if (roll > 82 && aS.hype > 35) {
       updateTurnLabel(aEl, "✨ POWERING UP");
       banner(
         isA ? "a" : "b",
@@ -825,12 +854,12 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       await delay(500);
       applyAnim(aEl, "buff-glow", 600);
-      const bStat = pick(["power", "speed", "chaos", "focus", "stamina"]);
-      const bAmt = rand(5, 14);
+      const bStat = pick(["power", "speed", "chaos", "focus", "stamina", "grit", "swagger"]);
+      const bAmt = rand(8, 14);
       aS[bStat] = Math.min(99, aS[bStat] + bAmt);
       renderStatBars(isA ? statsA : statsB, aS);
-      setStatus(aEl, "💪");
-      const label = { power: "Power", speed: "Speed", chaos: "Chaos", focus: "Focus", stamina: "Stamina" }[bStat];
+      setStatus(aEl, "💪", "buff");
+      const label = { power: "Power", speed: "Speed", chaos: "Chaos", focus: "Focus", stamina: "Stamina", grit: "Grit", swagger: "Swagger" }[bStat];
       banner(
         isA ? "a" : "b",
         `✨ ${pick(buffLines)} <b>[${label} +${bAmt}]</b>`,
@@ -844,15 +873,14 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       );
       if (isA) combo1 = 0;
       else combo2 = 0;
-      await delay(TURN_DELAY);
-      continue;
+      // NOTE: buff is a free action — no continue, fighter buffs AND attacks same turn
     }
 
     // SHIELD
     const myShield = isA ? shield1 : shield2;
     if (roll > 84 && aS.defense > 35 && myShield === 0) {
       updateTurnLabel(aEl, "🛡️ SHIELDING");
-      const shieldHp = rand(10, 20) + Math.round(aS.stamina / 6);
+      const shieldHp = rand(10, 20) + Math.round(aS.stamina / 4);
       banner(
         isA ? "a" : "b",
         `🛡️ Raising defenses...`,
@@ -870,7 +898,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       aEl.classList.add("shielded");
       if (isA) shield1 = shieldHp;
       else shield2 = shieldHp;
-      setStatus(aEl, "🛡️");
+      setStatus(aEl, "🛡️", "shield");
       banner(
         isA ? "a" : "b",
         `🛡️ ${pick(shieldLines)} <b>[${shieldHp}hp shield]</b>`,
@@ -915,7 +943,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if (isA) stun2 = true;
       else stun1 = true;
       dEl.classList.add("stunned");
-      setStatus(dEl, "😵");
+      setStatus(dEl, "😵", "stun");
       banner(
         isA ? "a" : "b",
         `😵 ${pick(stunLines)} <b>[stunned!]</b>`,
@@ -936,7 +964,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     // LIFESTEAL (hype triggers, swagger boosts)
     if (roll > 70 && roll <= 78 && aS.hype > 30 && myHp < 75) {
       updateTurnLabel(aEl, "🩸 DRAINING");
-      const lsDmg = rand(5, 10) + Math.round(aS.hype / 12) + Math.round(aS.swagger / 25);
+      const lsDmg = rand(5, 10) + Math.round(aS.hype / 8) + Math.round(aS.swagger / 15);
       const lsHeal = Math.round(lsDmg * 0.5);
       banner(
         isA ? "a" : "b",
@@ -1089,7 +1117,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     if (roll > 36 && roll <= 40 && aS.grit > 40 && aS.power > 35 && myHp > 20) {
       updateTurnLabel(aEl, "💢 BERSERKER");
       const selfDmg = rand(6, 12);
-      const brkDmg = rand(14, 22) + Math.round(aS.power / 8) + Math.round(aS.grit / 10);
+      const brkDmg = rand(14, 22) + Math.round(aS.power / 10) + Math.round(aS.grit / 8);
       banner(isA ? "a" : "b", `💢 ${pick(berserkerLines)}`, "rage");
       playSound("rage");
       addLog(battleLogBody, "💢", `${atk.name} ${pick(berserkerLines)}`, "rage");
@@ -1171,7 +1199,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       applyAnim(aEl, "reflect-flash", 500);
       if (isA) reflect1 = rTurns;
       else reflect2 = rTurns;
-      setStatus(aEl, "🪞");
+      setStatus(aEl, "🪞", "reflect");
       banner(
         isA ? "a" : "b",
         `🪞 ${pick(reflectLines)} <b>[reflect ${rTurns}t]</b>`,
@@ -1222,7 +1250,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       }
       dEl.classList.add("burning");
       showPopup(dEl, "-" + bDmg + " 🔥", "");
-      setStatus(dEl, "🔥");
+      setStatus(dEl, "🔥", "burn");
       const c = getElCenter(dEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#fb923c", 12);
       banner(
@@ -1275,7 +1303,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
       }
       showPopup(dEl, "-" + pDmg + " ☠️", "");
-      setStatus(dEl, "☠️");
+      setStatus(dEl, "☠️", "poison");
       const c = getElCenter(dEl, arenaWrapper);
       spawnParticles(particleContainer, c.x, c.y, "#cc44ff", 10);
       banner(
@@ -1330,18 +1358,23 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // INTIMIDATE (swagger × hype — weaken enemy's next attack)
-    if (roll > 52 && roll <= 56 && aS.swagger > 35 && aS.hype > 25) {
+    if (roll > 48 && roll <= 56 && aS.swagger > 35 && aS.hype > 25) {
       updateTurnLabel(aEl, "😤 INTIMIDATING");
-      const weakenPct = Math.round(30 + aS.swagger / 5 + aS.hype / 10);
+      const weakenPct = Math.round(35 + aS.swagger / 4);
       banner(isA ? "a" : "b", `😤 ${pick(intimidateLines)}...`, "intimidate");
       playSound("intimidate");
       addLog(battleLogBody, "😤", `${atk.name} ${pick(intimidateLines)}...`, "intimidate");
       await delay(500);
       applyAnim(aEl, "buff-glow", 600);
-      if (isA) intimidate2 = 1;
-      else intimidate1 = 1;
-      banner(isA ? "a" : "b", `😤 ${def.name} intimidated! <b>[-${weakenPct}% next atk]</b>`, "intimidate");
-      addLog(battleLogBody, "😤", `${def.name} is <b>INTIMIDATED</b>! Next attack weakened by ${weakenPct}%!`, "intimidate");
+      if (isA) intimidate2 = 2;
+      else intimidate1 = 2;
+      // Intimidation also deals minor psychic damage
+      const intimDmg = Math.round(rand(2, 5) + aS.swagger / 18);
+      if (isA) { hp2 = Math.max(0, hp2 - intimDmg); updateHpBar(hpBarB, hpTextB, hp2, MAX_HP); }
+      else { hp1 = Math.max(0, hp1 - intimDmg); updateHpBar(hpBarA, hpTextA, hp1, MAX_HP); }
+      showPopup(dEl, "-" + intimDmg + " 😤", "");
+      banner(isA ? "a" : "b", `😤 ${def.name} intimidated! <b>[-${intimDmg}hp, -${weakenPct}% atk 2t]</b>`, "intimidate");
+      addLog(battleLogBody, "😤", `${def.name} is <b>INTIMIDATED</b>! -${intimDmg} HP, attack weakened by ${weakenPct}% for 2 turns!`, "intimidate");
       if (isA) combo1 = 0;
       else combo2 = 0;
       await delay(TURN_DELAY);
@@ -1360,7 +1393,10 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if (isA) { poison1 = 0; burn1 = 0; stun1 = false; sabotage1 = 0; }
       else { poison2 = 0; burn2 = 0; stun2 = false; sabotage2 = 0; }
       aEl.classList.remove("stunned", "burning");
-      const cleanseHeal = rand(3, 8) + Math.round(aS.stamina / 15);
+      setStatus(aEl, null, "poison");
+      setStatus(aEl, null, "burn");
+      setStatus(aEl, null, "stun");
+      const cleanseHeal = rand(3, 8) + Math.round(aS.stamina / 10);
       if (isA) { hp1 = Math.min(MAX_HP, hp1 + cleanseHeal); updateHpBar(hpBarA, hpTextA, hp1, MAX_HP); }
       else { hp2 = Math.min(MAX_HP, hp2 + cleanseHeal); updateHpBar(hpBarB, hpTextB, hp2, MAX_HP); }
       showPopup(aEl, "+" + cleanseHeal + " HP 🧹", "heal-pop");
@@ -1371,8 +1407,63 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       continue;
     }
 
+    // TAUNT (swagger — forces enemy to only normal attack next turn)
+    if (roll > 24 && roll <= 28 && aS.swagger > 40 && aS.hype > 30) {
+      updateTurnLabel(aEl, "😏 TAUNTING");
+      if (isA) taunt2 = true; else taunt1 = true;
+      const tDmg = Math.round(rand(2, 6) + aS.swagger / 16);
+      banner(isA ? "a" : "b", `😏 Taunting ${def.name}...`, "intimidate");
+      playSound("intimidate");
+      addLog(battleLogBody, "😏", `${atk.name} taunts ${def.name}!`, "intimidate");
+      await delay(500);
+      applyAnim(aEl, "buff-glow", 600);
+      applyAnim(dEl, "stun-zap", 400);
+      if (isA) { hp2 = Math.max(0, hp2 - tDmg); updateHpBar(hpBarB, hpTextB, hp2, MAX_HP); }
+      else { hp1 = Math.max(0, hp1 - tDmg); updateHpBar(hpBarA, hpTextA, hp1, MAX_HP); }
+      showPopup(dEl, "-" + tDmg + " 😏", "");
+      banner(isA ? "a" : "b", `😏 Taunted! <b>[-${tDmg}hp, restricted next turn]</b>`, "intimidate");
+      addLog(battleLogBody, "😏", `${def.name} is <b>TAUNTED</b>! -${tDmg} HP, can only dodge or basic attack next turn!`, "intimidate");
+      if (isA) combo1 = 0; else combo2 = 0;
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    // PRECISION STRIKE (focus — ignores all damage reductions)
+    if (roll > 18 && roll <= 24 && aS.focus > 50) {
+      updateTurnLabel(aEl, "🎯 PRECISION STRIKE");
+      const pDmg = Math.round(rand(10, 18) + aS.focus / 8);
+      banner(isA ? "a" : "b", `🎯 Lining up the shot...`, "special");
+      playSound("specialCharge");
+      addLog(battleLogBody, "🎯", `${atk.name} focuses intensely...`, "special");
+      await delay(500);
+      applyAnim(aEl, isA ? "satk-r" : "satk-l", 500);
+      await delay(400);
+      applyAnim(dEl, "big-shake", 500);
+      applyAnim(dEl, "hit-flash", 300);
+      showPopup(dEl, "-" + pDmg + " 🎯", "special-pop");
+      const pc = getElCenter(dEl, arenaWrapper);
+      spawnParticles(particleContainer, pc.x, pc.y, "#60a5fa", 16);
+      spawnTextParticle(particleContainer, pc.x, pc.y - 25, "PRECISION!", "#93c5fd");
+      triggerFlash(flashOverlay, "gold");
+      screenShake(mainContainer, false);
+      playSound("specialImpact");
+      if (isA) { hp2 = Math.max(0, hp2 - pDmg); updateHpBar(hpBarB, hpTextB, hp2, MAX_HP); }
+      else { hp1 = Math.max(0, hp1 - pDmg); updateHpBar(hpBarA, hpTextA, hp1, MAX_HP); }
+      banner(isA ? "a" : "b", `🎯 Precision Strike! <b>[-${pDmg}hp, ignores reductions]</b>`, "special");
+      addLog(battleLogBody, "🎯", `${atk.name} lands a <b>PRECISION STRIKE</b> for <b>${pDmg} HP</b>! Ignores all damage reductions!`, "special");
+      startMajorEvent();
+      if (isA) combo1 = 0; else combo2 = 0;
+      await delay(500);
+      endMajorEvent();
+      logHpStatus(battleLogBody, f1.name, hp1, f2.name, hp2);
+      await delay(TURN_DELAY);
+      continue;
+    }
+
+    } // end if (!isTaunted) — taunted fighters skip to dodge/normal attack
+
     // DODGE (speed + wit bonus)
-    const dodgeChance = dS.speed / 280 + dS.wit / 500;
+    const dodgeChance = dS.speed / 260 + dS.wit / 500;
     if (Math.random() < dodgeChance) {
       updateTurnLabel(aEl, "👊 ATTACKING");
       const moveName = pick(atkNames);
@@ -1406,17 +1497,37 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       addLog(battleLogBody, "💨", `${def.name} ${pick(dodgeLines)}`, "dodge");
       if (isA) combo1 = 0;
       else combo2 = 0;
+      // Evasion Counter — speed-based counter after dodging
+      if (aS.speed > 45 && Math.random() < aS.speed / 250) {
+        await delay(300);
+        swapActiveTurn(aEl, dEl, "⚡ EVASION COUNTER");
+        const evDmg = rand(5, 11) + Math.round(aS.speed / 10);
+        applyAnim(dEl, isA ? "atk-l" : "atk-r", 350);
+        await delay(350);
+        applyAnim(aEl, "shake", 400);
+        applyAnim(aEl, "hit-flash", 300);
+        showPopup(aEl, "-" + evDmg + " ⚡", "");
+        const ec = getElCenter(aEl, arenaWrapper);
+        spawnParticles(particleContainer, ec.x, ec.y, "#67e8f9", 10);
+        spawnTextParticle(particleContainer, ec.x, ec.y - 25, "COUNTER!", "#67e8f9");
+        playSound("counter");
+        if (isA) { hp1 = Math.max(0, hp1 - evDmg); updateHpBar(hpBarA, hpTextA, hp1, MAX_HP); }
+        else { hp2 = Math.max(0, hp2 - evDmg); updateHpBar(hpBarB, hpTextB, hp2, MAX_HP); }
+        banner(isA ? "b" : "a", `⚡ Evasion Counter! <b>[-${evDmg}hp]</b>`, "counter");
+        addLog(battleLogBody, "⚡", `${def.name} dodged and countered for <b>${evDmg} HP</b>!`, "counter");
+        setActiveTurn(aEl, dEl);
+      }
       await delay(TURN_DELAY);
       continue;
     }
 
     // NORMAL ATTACK (first-strike bonus from speed in turns 1-3)
     const firstStrikeBonus = turn <= 6 ? aS.speed / 40 : 0;
-    const baseDmg = rand(7, 12) + aS.power / 9 + firstStrikeBonus;
+    const baseDmg = rand(7, 12) + aS.power / 22 + firstStrikeBonus;
     const isCrit = Math.random() < aS.chaos / 220;
     const critMultiplier = isCrit ? 1.55 + aS.focus / 150 : 1;
     let dmg = Math.round(
-      Math.max(3, baseDmg * critMultiplier - dS.defense / 12),
+      Math.max(3, Math.max(1, baseDmg - dS.defense / 17) * critMultiplier),
     );
     const moveName = pick(atkNames);
 
@@ -1429,20 +1540,27 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // Rage damage boost (hype amplifies rage)
     const atkRage = isA ? rage1 : rage2;
-    if (atkRage > 0) dmg = Math.round(dmg * (1.3 + aS.hype / 300));
+    if (atkRage > 0) dmg = Math.round(dmg * (1.55 + aS.hype / 130));
 
-    // Grit comeback bonus — +25% damage when below 30% HP
-    if (myHp < 30 && aS.grit > 30) {
-      dmg = Math.round(dmg * (1.0 + aS.grit / 300));
+    // Grit comeback bonus — damage boost when wounded
+    if (myHp < 40 && aS.grit > 25) {
+      dmg = Math.round(dmg * (1.0 + aS.grit / 200));
     }
 
     // Intimidate damage reduction — if attacker is intimidated
     const amIntimidated = isA ? intimidate1 : intimidate2;
     if (amIntimidated > 0) {
-      const weakenPct = 30 + (isA ? s2.swagger : s1.swagger) / 5;
+      const weakenPct = 35 + (isA ? s2.swagger : s1.swagger) / 4;
       dmg = Math.round(dmg * (1 - weakenPct / 100));
-      if (isA) intimidate1 = 0;
-      else intimidate2 = 0;
+      if (isA) intimidate1--; else intimidate2--;
+    }
+
+    // Passive swagger resistance (aura — always active)
+    if (dS.swagger > 25) dmg = Math.max(3, dmg - Math.round(dS.swagger / 10));
+
+    // Grit toughness (damage reduction when wounded)
+    if ((isA ? hp2 : hp1) < MAX_HP * 0.5 && dS.grit > 25) {
+      dmg = Math.max(3, dmg - Math.round(dS.grit / 30));
     }
 
     // Luck random bonus damage
@@ -1524,7 +1642,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       if ((isA ? shield2 : shield1) <= 0) {
         dEl.classList.remove("shielded");
         applyAnim(dEl, "shield-break", 400);
-        setStatus(dEl, null);
+        setStatus(dEl, null, "shield");
         banner(
           isA ? "b" : "a",
           `🛡️💥 Shield shattered! <b>[blocked ${absorbed}hp]</b>`,
@@ -1646,7 +1764,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // COUNTER ATTACK (luck + wit boosts chance and damage)
-    if (Math.random() < (dS.luck + dS.wit / 3) / 250 && (isA ? hp2 : hp1) > 0) {
+    if (Math.random() < (dS.luck + dS.wit) / 250 && (isA ? hp2 : hp1) > 0) {
       await delay(400);
       swapActiveTurn(aEl, dEl, "↩️ COUNTERING");
       // Visual: defender parries
@@ -1664,8 +1782,8 @@ export async function animatedFight(f1, f2, refs, onEvent) {
         "counter",
       );
       await delay(350);
-      const witBonus = Math.round(dS.wit / 12);
-      const cDmg = rand(3, 8) + witBonus;
+      const witBonus = Math.round(dS.wit / 7);
+      const cDmg = rand(5, 12) + witBonus;
       applyAnim(dEl, isA ? "atk-l" : "atk-r", 350);
       await delay(350);
       applyAnim(aEl, "big-shake", 500);
@@ -1703,7 +1821,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     if (defHpForExec > 0 && defHpForExec < 25 && aS.power > 35 && aS.grit > 30 && Math.random() < (aS.power + aS.grit) / 400) {
       setActiveTurn(aEl, dEl, "🎯 EXECUTE");
       await delay(300);
-      const execDmg = Math.round(rand(10, 18) + aS.power / 7 + aS.grit / 10);
+      const execDmg = Math.round(rand(10, 18) + aS.power / 9 + aS.grit / 8);
       banner(isA ? "a" : "b", `🎯 ${pick(executeLines)}`, "execute");
       playSound("execute");
       addLog(battleLogBody, "🎯", `${atk.name} goes for the <b>EXECUTE</b>!`, isA ? "hit-a" : "hit-b");
@@ -1731,7 +1849,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     const defHpNow = isA ? hp2 : hp1;
     const defRageNow = isA ? rage2 : rage1;
     const rageChance = 0.5 + (isA ? s2.grit : s1.grit) / 200;
-    if (defHpNow > 0 && defHpNow < 30 && defRageNow === 0 && Math.random() < rageChance) {
+    if (defHpNow > 0 && defHpNow < 35 && defRageNow === 0 && Math.random() < rageChance) {
       await delay(350);
       if (isA) rage2 = 3;
       else rage1 = 3;
@@ -1739,7 +1857,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       applyAnim(dEl, "rage-aura", 700);
       dEl.classList.add("enraged");
       triggerFlash(flashOverlay, "red");
-      setStatus(dEl, "🔥");
+      setStatus(dEl, "�", "rage");
       const rc = getElCenter(dEl, arenaWrapper);
       spawnParticles(particleContainer, rc.x, rc.y, "#ef4444", 16);
       spawnTextParticle(particleContainer, rc.x, rc.y - 25, "RAGE!", "#ef4444");
@@ -1877,8 +1995,92 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       } else if (evt.effect === "burnBoth") {
         burn1 = Math.max(burn1, 2); burn2 = Math.max(burn2, 2);
         fighterA.classList.add("burning"); fighterB.classList.add("burning");
+        setStatus(fighterA, "🔥", "burn"); setStatus(fighterB, "🔥", "burn");
         addLog(battleLogBody, "💡", `Both fighters are <b>burning</b> for 2 turns!`, "burn");
+      } else if (evt.effect === "stunRandom") {
+        const target = Math.random() < 0.5 ? "f1" : "f2";
+        if (target === "f1") { stun1 = true; fighterA.classList.add("stunned"); setStatus(fighterA, "😵", "stun"); applyAnim(fighterA, "stun-zap"); addLog(battleLogBody, "🎵", `${f1.name} is <b>stunned</b> and skips their next turn!`, "stun"); }
+        else { stun2 = true; fighterB.classList.add("stunned"); setStatus(fighterB, "😵", "stun"); applyAnim(fighterB, "stun-zap"); addLog(battleLogBody, "🎵", `${f2.name} is <b>stunned</b> and skips their next turn!`, "stun"); }
+      } else if (evt.effect === "debuffRandom") {
+        const targetIsF1 = Math.random() < 0.5;
+        const targetStats = targetIsF1 ? s1 : s2;
+        const targetName = targetIsF1 ? f1.name : f2.name;
+        const debuffKeys = ["power", "speed", "defense", "focus"];
+        const key = debuffKeys[rand(0, debuffKeys.length - 1)];
+        const amt = rand(5, 12);
+        targetStats[key] = Math.max(5, targetStats[key] - amt);
+        addLog(battleLogBody, "📊", `${targetName} loses <b>-${amt} ${key}</b>!`, "debuff");
       }
+      endMajorEvent();
+    }
+
+    // SECOND WIND (stamina passive — one-time emergency heal)
+    if (hp1 > 0 && hp1 < 20 && !secondWind1 && s1.stamina > 40) {
+      const swHeal = rand(8, 15) + Math.round(s1.stamina / 5);
+      hp1 = Math.min(MAX_HP, hp1 + swHeal);
+      secondWind1 = true;
+      updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      applyAnim(fighterA, "heal-glow", 600);
+      showPopup(fighterA, "+" + swHeal + " HP 💨", "heal-pop");
+      const swc = getElCenter(fighterA, arenaWrapper);
+      spawnParticles(particleContainer, swc.x, swc.y, "#39ff14", 14);
+      spawnTextParticle(particleContainer, swc.x, swc.y - 25, "SECOND WIND!", "#39ff14");
+      playSound("heal");
+      banner("a", `💨 Second Wind! <b>[+${swHeal}hp emergency heal]</b>`, "heal");
+      addLog(battleLogBody, "💨", `<b>${f1.name}</b> catches a <b>SECOND WIND</b>! +${swHeal} HP!`, "heal");
+      startMajorEvent();
+      await delay(500);
+      endMajorEvent();
+    }
+    if (hp2 > 0 && hp2 < 20 && !secondWind2 && s2.stamina > 40) {
+      const swHeal = rand(8, 15) + Math.round(s2.stamina / 5);
+      hp2 = Math.min(MAX_HP, hp2 + swHeal);
+      secondWind2 = true;
+      updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      applyAnim(fighterB, "heal-glow", 600);
+      showPopup(fighterB, "+" + swHeal + " HP 💨", "heal-pop");
+      const swc = getElCenter(fighterB, arenaWrapper);
+      spawnParticles(particleContainer, swc.x, swc.y, "#39ff14", 14);
+      spawnTextParticle(particleContainer, swc.x, swc.y - 25, "SECOND WIND!", "#39ff14");
+      playSound("heal");
+      banner("b", `💨 Second Wind! <b>[+${swHeal}hp emergency heal]</b>`, "heal");
+      addLog(battleLogBody, "💨", `<b>${f2.name}</b> catches a <b>SECOND WIND</b>! +${swHeal} HP!`, "heal");
+      startMajorEvent();
+      await delay(500);
+      endMajorEvent();
+    }
+
+    // ENDURE (grit passive — survive killing blow once)
+    if (hp1 <= 0 && !endure1 && s1.grit > 45 && Math.random() < s1.grit / 200) {
+      hp1 = 1;
+      endure1 = true;
+      updateHpBar(hpBarA, hpTextA, hp1, MAX_HP);
+      applyAnim(fighterA, "heal-glow", 600);
+      showPopup(fighterA, "ENDURE! 💎", "heal-pop");
+      const ec = getElCenter(fighterA, arenaWrapper);
+      spawnParticles(particleContainer, ec.x, ec.y, "#fbbf24", 16);
+      spawnTextParticle(particleContainer, ec.x, ec.y - 25, "ENDURE!", "#fbbf24");
+      playSound("luckySave");
+      banner("a", `💎 ${f1.name} ENDURES! Survives at 1 HP!`, "heal");
+      addLog(battleLogBody, "💎", `<b>${f1.name}</b> <b>ENDURES</b> the killing blow! Grit keeps them alive at 1 HP!`, "heal");
+      startMajorEvent();
+      await delay(600);
+      endMajorEvent();
+    }
+    if (hp2 <= 0 && !endure2 && s2.grit > 45 && Math.random() < s2.grit / 200) {
+      hp2 = 1;
+      endure2 = true;
+      updateHpBar(hpBarB, hpTextB, hp2, MAX_HP);
+      applyAnim(fighterB, "heal-glow", 600);
+      showPopup(fighterB, "ENDURE! 💎", "heal-pop");
+      const ec = getElCenter(fighterB, arenaWrapper);
+      spawnParticles(particleContainer, ec.x, ec.y, "#fbbf24", 16);
+      spawnTextParticle(particleContainer, ec.x, ec.y - 25, "ENDURE!", "#fbbf24");
+      playSound("luckySave");
+      banner("b", `💎 ${f2.name} ENDURES! Survives at 1 HP!`, "heal");
+      addLog(battleLogBody, "💎", `<b>${f2.name}</b> <b>ENDURES</b> the killing blow! Grit keeps them alive at 1 HP!`, "heal");
+      startMajorEvent();
+      await delay(600);
       endMajorEvent();
     }
 

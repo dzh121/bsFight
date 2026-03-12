@@ -53,6 +53,7 @@ export default function BetPage() {
   const fightBetRef = useRef(null);
   const bannerKeyRef = useRef(0);
   const betTimerRef = useRef(null);
+  const matchClearTimerRef = useRef(null);
 
   const BET_WINDOW_SECS = 8;
 
@@ -92,6 +93,10 @@ export default function BetPage() {
         const d = msg.data;
 
         if (d.event === "matchStart") {
+          if (matchClearTimerRef.current) {
+            clearTimeout(matchClearTimerRef.current);
+            matchClearTimerRef.current = null;
+          }
           setStatus("live");
           setFightBet(null);
           setFightBetLocked(false);
@@ -130,6 +135,12 @@ export default function BetPage() {
           if (!champLocked) {
             setChampLocked(true);
           }
+        }
+
+        if (d.event === "tournamentInProgress") {
+          setStatus("live");
+          setChampLocked(true);
+          if (d.survivors) setSurvivors(d.survivors);
         }
 
         if (d.event === "action") {
@@ -204,6 +215,9 @@ export default function BetPage() {
               fightTotal: prev.fightTotal + 1,
             }));
           }
+          // Clear match after delay to show between-matches survivors screen
+          if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
+          matchClearTimerRef.current = setTimeout(() => setMatch(null), 2800);
         }
 
         if (d.event === "elimination") {
@@ -217,14 +231,30 @@ export default function BetPage() {
       }
 
       if (msg.type === "roomReset") {
+        if (betTimerRef.current) { clearInterval(betTimerRef.current); betTimerRef.current = null; }
+        if (matchClearTimerRef.current) { clearTimeout(matchClearTimerRef.current); matchClearTimerRef.current = null; }
         setStatus("waiting");
         setFighters([]);
+        setSurvivors([]);
+        setChampBet(null);
+        setChampLocked(false);
+        setFightBet(null);
+        setFightBetLocked(false);
+        setFightBetResult(null);
+        setBetCountdown(0);
+        setMatch(null);
+        setActionLog([]);
+        setChampionData(null);
+        setScore({ fightWins: 0, fightTotal: 0 });
+        champBetRef.current = null;
+        fightBetRef.current = null;
       }
     };
 
     return () => {
       ws.close();
       if (betTimerRef.current) clearInterval(betTimerRef.current);
+      if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
     };
   }, []);
 
@@ -313,65 +343,67 @@ export default function BetPage() {
             <span className="bet-header-icon">🎰</span>
             <h2 className="bet-header-title">PICK YOUR CHAMPION</h2>
             <p className="bet-header-sub">
-              Who will win the whole tournament? Tap a fighter to see stats,
-              then lock your pick.
-              <br />
-              Or skip to just spectate.
+              Who will win the whole tournament?{" "}
+              <b>Tap PICK</b> to bet, or tap a name to see stats first.
             </p>
           </div>
 
           <div className="bet-fighter-grid">
             {fighters.map((f) => (
               <div key={f.name} className="bet-fighter-cell">
-                <button
-                  className={`bet-fighter-btn ${expandedFighter === f.name ? "expanded" : ""}`}
-                  onClick={() =>
-                    setExpandedFighter(
-                      expandedFighter === f.name ? null : f.name,
-                    )
-                  }
-                >
-                  <span className="bet-fighter-emoji">{f.emoji || "🧑‍💼"}</span>
-                  <span className="bet-fighter-name">{f.name}</span>
-                </button>
-                {expandedFighter === f.name && (
-                  <div className="bet-fighter-stats">
-                    {f.stats &&
-                      STAT_KEYS.map(
-                        (k) =>
-                          f.stats[k] !== undefined && (
-                            <div key={k} className="bet-stat-row">
-                              <span className="bet-stat-icon">
-                                {STAT_ICONS[k]}
-                              </span>
-                              <span className="bet-stat-label">{k}</span>
-                              <div className="bet-stat-bar-bg">
-                                <div
-                                  className={`bet-stat-bar-fill ${k}`}
-                                  style={{
-                                    width: `${Math.min(100, f.stats[k])}%`,
-                                  }}
-                                />
-                              </div>
-                              <span className="bet-stat-val">{f.stats[k]}</span>
-                            </div>
-                          ),
-                      )}
+                <div className="bet-fighter-row">
+                  <div className="bet-fighter-info-col">
                     <button
-                      className="bet-lock-btn"
-                      onClick={() => lockChampBet(f)}
+                      className={`bet-fighter-info-btn${expandedFighter === f.name ? " expanded" : ""}`}
+                      onClick={() =>
+                        setExpandedFighter(
+                          expandedFighter === f.name ? null : f.name,
+                        )
+                      }
                     >
-                      🔒 LOCK BET — {f.name}
+                      <span className="bet-fighter-emoji">{f.emoji || "🧑‍💼"}</span>
+                      <span className="bet-fighter-name">{f.name}</span>
+                      <span className="bet-info-chevron">{expandedFighter === f.name ? "▲" : "▼"}</span>
                     </button>
+                    {expandedFighter === f.name && (
+                      <div className="bet-fighter-stats">
+                        {f.stats &&
+                          STAT_KEYS.map(
+                            (k) =>
+                              f.stats[k] !== undefined && (
+                                <div key={k} className="bet-stat-row">
+                                  <span className="bet-stat-icon">
+                                    {STAT_ICONS[k]}
+                                  </span>
+                                  <span className="bet-stat-label">{k}</span>
+                                  <div className="bet-stat-bar-bg">
+                                    <div
+                                      className={`bet-stat-bar-fill ${k}`}
+                                      style={{
+                                        width: `${Math.min(100, f.stats[k])}%`,
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="bet-stat-val">{f.stats[k]}</span>
+                                </div>
+                              ),
+                          )}
+                      </div>
+                    )}
                   </div>
-                )}
+                  <button
+                    className="bet-pick-btn"
+                    onClick={() => lockChampBet(f)}
+                  >
+                    PICK
+                  </button>
+                </div>
               </div>
             ))}
           </div>
 
           <button
-            className="bet-lock-btn"
-            style={{ opacity: 0.6 }}
+            className="bet-skip-btn"
             onClick={() => setChampLocked(true)}
           >
             ⏭ SKIP — Just Spectate
@@ -455,7 +487,7 @@ export default function BetPage() {
                 <div className="bet-fight-title">
                   ⚡ QUICK BET — Who wins this fight?
                   {betCountdown > 0 && (
-                    <span className="bet-countdown"> ({betCountdown}s)</span>
+                    <span className={`bet-countdown${betCountdown <= 3 ? " urgent" : ""}`}> ({betCountdown}s)</span>
                   )}
                 </div>
                 <div className="bet-fight-btns">

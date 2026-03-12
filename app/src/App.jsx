@@ -435,6 +435,13 @@ function App() {
       }
     };
     broadcastEvent({
+      event: "matchStart",
+      f1: { name: currentPair[0].name, emoji: currentPair[0].emoji },
+      f2: { name: currentPair[1].name, emoji: currentPair[1].emoji },
+      hp1: MAX_HP,
+      hp2: MAX_HP,
+    });
+    broadcastEvent({
       event: "matchEnd",
       winner: { name: winner.name, emoji: winner.emoji },
       loser: { name: loser.name, emoji: loser.emoji },
