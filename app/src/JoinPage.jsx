@@ -81,11 +81,6 @@ const EMOJI_OPTIONS = [
   "🃏",
 ];
 
-function getWsUrl() {
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/game-ws`;
-}
-
 export default function JoinPage() {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("😎");
@@ -99,6 +94,14 @@ export default function JoinPage() {
   const [match, setMatch] = useState(null);
   const [actionLog, setActionLog] = useState([]);
   const [championData, setChampionData] = useState(null);
+
+  // Player-controlled turn state
+  const [turnOptions, setTurnOptions] = useState(null); // action options from host
+  const [turnTimer, setTurnTimer] = useState(0);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [turnPhase, setTurnPhase] = useState("spectating"); // spectating | choosing | chosen | waiting
+  const [turnBattleState, setTurnBattleState] = useState(null);
+  const turnTimerRef = useRef(null);
 
   // Betting state
   const [survivors, setSurvivors] = useState([]);
@@ -130,6 +133,7 @@ export default function JoinPage() {
     return () => {
       if (wsRef.current) wsRef.current.close();
       if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
+      if (turnTimerRef.current) clearInterval(turnTimerRef.current);
     };
   }, []);
 
@@ -175,6 +179,11 @@ export default function JoinPage() {
             winner: null,
           });
           setActionLog([]);
+          // Reset turn state for new match
+          setTurnPhase("spectating");
+          setTurnOptions(null);
+          setSelectedAction(null);
+          if (turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
         }
         if (d.event === "action") {
           bannerKeyRef.current++;
@@ -226,6 +235,10 @@ export default function JoinPage() {
           // Clear match after delay to show between-matches waiting screen
           if (matchClearTimerRef.current) clearTimeout(matchClearTimerRef.current);
           matchClearTimerRef.current = setTimeout(() => setMatch(null), 2800);
+          // Reset turn state after match ends
+          setTurnPhase("spectating");
+          setTurnOptions(null);
+          if (turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
           // Track bet wins via ref (avoids stale closure)
           const currentBet = betRef.current;
           if (currentBet) {
@@ -240,6 +253,40 @@ export default function JoinPage() {
       if (msg.type === "tournamentEnd") {
         setChampionData(msg.data);
         setStatus("champion");
+        setTurnPhase("spectating");
+        setTurnOptions(null);
+        if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+      }
+      // Player-controlled turn: host asks us to choose an action
+      if (msg.type === "yourTurn") {
+        setTurnOptions(msg.options || []);
+        setTurnBattleState(msg.battleState || null);
+        setSelectedAction(null);
+        setTurnPhase("choosing");
+        setTurnTimer(msg.turnTimer || 12);
+        // Start countdown
+        if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+        const startTime = Date.now();
+        const totalMs = (msg.turnTimer || 12) * 1000;
+        turnTimerRef.current = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, Math.ceil((totalMs - elapsed) / 1000));
+          setTurnTimer(remaining);
+          if (remaining <= 0) {
+            clearInterval(turnTimerRef.current);
+            turnTimerRef.current = null;
+          }
+        }, 250);
+      }
+      if (msg.type === "waitTurn") {
+        setTurnPhase("waiting");
+        setTurnOptions(null);
+        if (turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
+      }
+      if (msg.type === "turnSkipped") {
+        setTurnPhase("spectating");
+        setTurnOptions(null);
+        if (turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
       }
     };
     ws.addEventListener("message", handler);
@@ -264,6 +311,17 @@ export default function JoinPage() {
       if (status === "connecting") setStatus("idle");
     };
   };
+
+  const handleSelectAction = useCallback((actionId) => {
+    if (selectedAction || turnPhase !== "choosing") return;
+    setSelectedAction(actionId);
+    setTurnPhase("chosen");
+    if (turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
+    const ws = wsRef.current;
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: "selectAction", actionId }));
+    }
+  }, [selectedAction, turnPhase]);
 
   const myName = confirmedPlayer?.name;
 
@@ -384,6 +442,58 @@ export default function JoinPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Player-controlled turn: action selection */}
+          {isMyFight && turnPhase === "choosing" && turnOptions && (
+            <div className="turn-panel">
+              <div className="turn-header">
+                <span className="turn-label">YOUR TURN!</span>
+                <span className={`turn-timer${turnTimer <= 3 ? " urgent" : ""}`}>
+                  {turnTimer}s
+                </span>
+              </div>
+              <div className="turn-timer-bar">
+                <div
+                  className={`turn-timer-fill${turnTimer <= 3 ? " urgent" : ""}`}
+                  style={{ width: `${(turnTimer / 12) * 100}%` }}
+                />
+              </div>
+              {turnBattleState && (
+                <div className="turn-state-row">
+                  <span className="turn-state-item">❤️ {Math.round(turnBattleState.hp)}/{turnBattleState.maxHp}</span>
+                  <span className="turn-state-item">⚡ {Math.round(turnBattleState.nrg)}/{turnBattleState.maxNrg}</span>
+                  <span className="turn-state-item">👤 {Math.round(turnBattleState.enemyHp)} HP</span>
+                </div>
+              )}
+              <div className="turn-actions">
+                {turnOptions.map((opt) => {
+                  const catClass = opt.cat === "offensive" ? "action-offensive"
+                    : opt.cat === "defensive" ? "action-defensive" : "action-utility";
+                  return (
+                    <button
+                      key={opt.id}
+                      className={`action-card ${catClass}`}
+                      onClick={() => handleSelectAction(opt.id)}
+                    >
+                      <span className="action-emoji">{opt.emoji}</span>
+                      <span className="action-name">{opt.name}</span>
+                      <span className="action-desc">{opt.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {isMyFight && turnPhase === "chosen" && (
+            <div className="turn-panel turn-chosen">
+              <span className="turn-chosen-text">Action selected! Waiting...</span>
+            </div>
+          )}
+          {isMyFight && turnPhase === "waiting" && (
+            <div className="turn-panel turn-waiting">
+              <span className="turn-waiting-text">Opponent's turn...</span>
+            </div>
           )}
 
           {/* Betting UI for eliminated players */}

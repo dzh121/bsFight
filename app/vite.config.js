@@ -140,6 +140,37 @@ function gameWsPlugin() {
             });
           }
 
+          // ── Player-controlled turn messages ──
+
+          // Host sends targeted message to a specific player by ID
+          if (msg.type === "targetPlayer" && msg.playerId && msg.payload) {
+            wss.clients.forEach((c) => {
+              if (c.playerId === msg.playerId && c.readyState === 1) {
+                c.send(JSON.stringify(msg.payload));
+              }
+            });
+          }
+
+          // Host broadcasts to all connected players (not spectators)
+          if (msg.type === "broadcastPlayers" && msg.payload) {
+            wss.clients.forEach((c) => {
+              if (c.playerId && c.readyState === 1) {
+                c.send(JSON.stringify(msg.payload));
+              }
+            });
+          }
+
+          // Player sends their chosen action — relay to host
+          if (msg.type === "selectAction" && ws.playerId) {
+            if (hostWs && hostWs.readyState === 1) {
+              hostWs.send(JSON.stringify({
+                type: "playerAction",
+                playerId: ws.playerId,
+                actionId: msg.actionId,
+              }));
+            }
+          }
+
           if (msg.type === "tournamentEnd") {
             lastTournamentEnd = { type: "tournamentEnd", data: msg.data };
             currentMatch = null;
@@ -158,6 +189,8 @@ function gameWsPlugin() {
             players.delete(ws.playerId);
             if (hostWs && hostWs.readyState === 1) {
               hostWs.send(JSON.stringify({ type: "playerLeft", player: p }));
+              // Notify host that this player disconnected (for mid-fight handling)
+              hostWs.send(JSON.stringify({ type: "playerDisconnected", playerId: ws.playerId }));
             }
           }
           if (ws === hostWs) hostWs = null;

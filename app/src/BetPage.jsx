@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./styles/battle.css";
+import { getWsUrl } from "./utils/wsConnection";
 
 const STAT_ICONS = {
   power: "💪",
@@ -16,11 +17,6 @@ const STAT_ICONS = {
 };
 
 const STAT_KEYS = Object.keys(STAT_ICONS);
-
-function getWsUrl() {
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/game-ws`;
-}
 
 export default function BetPage() {
   const [status, setStatus] = useState("waiting"); // waiting | betting | live | done

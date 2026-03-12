@@ -33,6 +33,7 @@ import {
   crowdEventLines,
   getEmoji,
 } from "./helpers";
+import { generateActionOptions, npcAutoSelect } from "./actionGenerator.js";
 import { playSound } from "./soundEngine";
 
 function delay(ms) {
@@ -349,7 +350,7 @@ function logHpStatus(bodyEl, f1Name, hp1, f2Name, hp2) {
   );
 }
 
-export async function animatedFight(f1, f2, refs, onEvent) {
+export async function animatedFight(f1, f2, refs, onEvent, actionResolver) {
   const emit = onEvent || (() => {});
   const {
     fighterA,
@@ -691,12 +692,11 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       updateNrgBar(nrgBarB, nrgTextB, nrg2);
     }
 
-    const roll = Math.random() * 100;
     const myNrg = isA ? nrg1 : nrg2;
     const myHp = isA ? hp1 : hp2;
     const defHp = isA ? hp2 : hp1;
 
-    // Taunt enforcement — taunted fighters can only dodge or normal attack
+    // Taunt enforcement — consume taunt state
     const isTaunted = isA ? taunt1 : taunt2;
     if (isTaunted) {
       if (isA) taunt1 = false; else taunt2 = false;
@@ -705,9 +705,35 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       await delay(400);
     }
 
-    if (!isTaunted) {
+    // ── ACTION GENERATION + PLAYER INPUT ──
+    const battleState = {
+      hp: myHp, maxHp: MAX_HP, nrg: myNrg, maxNrg: MAX_NRG,
+      shield: isA ? shield1 : shield2,
+      reflect: isA ? reflect1 : reflect2,
+      isTaunted,
+      hasDebuffs: (isA ? poison1 : poison2) > 0 || (isA ? burn1 : burn2) > 0
+        || (isA ? stun1 : stun2) || (isA ? sabotage1 : sabotage2) > 0,
+      enemyHp: defHp, enemyStunned: isA ? stun2 : stun1,
+      enemyBurning: (isA ? burn2 : burn1) > 0,
+      enemyPoisoned: (isA ? poison2 : poison1) > 0,
+      enemySabotaged: (isA ? sabotage2 : sabotage1) > 0,
+      enemyNrg: isA ? nrg2 : nrg1,
+      enemyDefense: dS.defense,
+    };
+    const actionOptions = generateActionOptions(aS, dS, battleState);
+
+    let chosenAction;
+    if (actionResolver) {
+      chosenAction = await actionResolver(atk, isA, actionOptions, battleState);
+      // null = timeout or disconnect — auto-select fallback
+      if (!chosenAction) chosenAction = npcAutoSelect(actionOptions, battleState);
+    } else {
+      chosenAction = npcAutoSelect(actionOptions, battleState);
+      await delay(150); // brief NPC "thinking" delay
+    }
+
     // SPECIAL MOVE
-    if (myNrg >= 60 && roll < 20 + aS.focus / 18) {
+    if (chosenAction === "special_move" && myNrg >= 60) {
       updateTurnLabel(aEl, "⚡ SPECIAL MOVE");
       if (isA) nrg1 -= 60;
       else nrg2 -= 60;
@@ -793,7 +819,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // HEAL (luck triggers, stamina+grit boost amount, swagger of enemy reduces it)
-    if (myHp < 60 && roll < 22 + aS.luck / 6) {
+    if (chosenAction === "heal") {
       updateTurnLabel(aEl, "💚 HEALING");
       const staminaBonus = Math.round(aS.stamina / 6);
       const gritBonus = myHp < 30 ? Math.round(aS.grit / 14) : 0;
@@ -838,7 +864,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // BUFF
-    if (roll > 82 && aS.hype > 35) {
+    if (chosenAction === "buff") {
       updateTurnLabel(aEl, "✨ POWERING UP");
       banner(
         isA ? "a" : "b",
@@ -878,7 +904,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // SHIELD
     const myShield = isA ? shield1 : shield2;
-    if (roll > 84 && aS.defense > 35 && myShield === 0) {
+    if (chosenAction === "shield") {
       updateTurnLabel(aEl, "🛡️ SHIELDING");
       const shieldHp = rand(10, 20) + Math.round(aS.stamina / 4);
       banner(
@@ -918,7 +944,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // STUN ATTACK
     const defStunned = isA ? stun2 : stun1;
-    if (roll > 78 && aS.chaos > 45 && !defStunned) {
+    if (chosenAction === "stun_attack") {
       updateTurnLabel(aEl, "⚡ STUNNING");
       banner(
         isA ? "a" : "b",
@@ -962,7 +988,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // LIFESTEAL (hype triggers, swagger boosts)
-    if (roll > 70 && roll <= 78 && aS.hype > 30 && myHp < 75) {
+    if (chosenAction === "lifesteal") {
       updateTurnLabel(aEl, "🩸 DRAINING");
       const lsDmg = rand(5, 10) + Math.round(aS.hype / 8) + Math.round(aS.swagger / 15);
       const lsHeal = Math.round(lsDmg * 0.5);
@@ -1022,7 +1048,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // SIPHON ENERGY (focus × swagger — steal energy from opponent)
     const defNrg = isA ? nrg2 : nrg1;
-    if (roll > 44 && roll <= 48 && aS.focus > 35 && aS.swagger > 25 && defNrg > 15) {
+    if (chosenAction === "siphon_energy") {
       updateTurnLabel(aEl, "🔋 SIPHONING");
       const siphonAmt = rand(15, 30) + Math.round(aS.focus / 10);
       banner(isA ? "a" : "b", `🔋 ${pick(siphonLines)}`, "special");
@@ -1053,7 +1079,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // CHAIN LIGHTNING (chaos × speed — multi-hit 2-3 times with decreasing damage)
-    if (roll > 48 && roll <= 52 && aS.chaos > 40 && aS.speed > 30) {
+    if (chosenAction === "chain_lightning") {
       updateTurnLabel(aEl, "⚡ CHAIN LIGHTNING");
       const hits = aS.speed > 55 ? 3 : 2;
       let totalDmg = 0;
@@ -1085,7 +1111,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // ARMOR BREAK (power × wit — permanently reduce enemy defense)
-    if (roll > 40 && roll <= 44 && aS.power > 40 && aS.wit > 30 && dS.defense > 15) {
+    if (chosenAction === "armor_break") {
       updateTurnLabel(aEl, "🔨 ARMOR BREAK");
       const breakAmt = rand(4, 9) + Math.round(aS.power / 20);
       const abDmg = rand(3, 7);
@@ -1114,7 +1140,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // BERSERKER STRIKE (grit × power — trade own HP for massive damage)
-    if (roll > 36 && roll <= 40 && aS.grit > 40 && aS.power > 35 && myHp > 20) {
+    if (chosenAction === "berserker_strike") {
       updateTurnLabel(aEl, "💢 BERSERKER");
       const selfDmg = rand(6, 12);
       const brkDmg = rand(14, 22) + Math.round(aS.power / 10) + Math.round(aS.grit / 8);
@@ -1151,7 +1177,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // SOUL SWAP (hype × swagger — swap a portion of HP with the enemy)
     const defHpForSwap = isA ? hp2 : hp1;
-    if (roll > 32 && roll <= 36 && aS.hype > 35 && aS.swagger > 30 && myHp < defHpForSwap - 10) {
+    if (chosenAction === "soul_swap") {
       updateTurnLabel(aEl, "🔄 SOUL SWAP");
       const swapPct = Math.round(15 + aS.swagger / 8 + aS.hype / 10);
       const swapAmt = Math.round(Math.min(18, (defHpForSwap - myHp) * swapPct / 100));
@@ -1180,7 +1206,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // REFLECT (defensive buff — bounces damage back)
     const myReflectNow = isA ? reflect1 : reflect2;
-    if (roll > 64 && roll <= 70 && aS.defense > 40 && myReflectNow === 0) {
+    if (chosenAction === "reflect") {
       updateTurnLabel(aEl, "🪞 REFLECTING");
       const rTurns = rand(2, 3);
       banner(
@@ -1219,7 +1245,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // BURN ATTACK (DoT that increases each tick)
     const defBurn = isA ? burn2 : burn1;
-    if (roll > 60 && roll <= 64 && aS.chaos > 35 && defBurn === 0) {
+    if (chosenAction === "burn_attack") {
       updateTurnLabel(aEl, "🔥 BURNING");
       const bTurns = 3;
       const bDmg = rand(3, 7);
@@ -1273,7 +1299,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // POISON ATTACK (now wit-based instead of chaos)
     const defPoison = isA ? poison2 : poison1;
-    if (roll > 82 && aS.wit > 35 && defPoison === 0) {
+    if (chosenAction === "poison_attack") {
       updateTurnLabel(aEl, "🧪 POISONING");
       banner(
         isA ? "a" : "b",
@@ -1326,7 +1352,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // SABOTAGE (wit × chaos — reduce random enemy stat)
     const defSabotage = isA ? sabotage2 : sabotage1;
-    if (roll > 56 && roll <= 60 && aS.wit > 40 && aS.chaos > 30 && defSabotage === 0) {
+    if (chosenAction === "sabotage") {
       updateTurnLabel(aEl, "🔧 SABOTAGING");
       const sabAmt = rand(8, 15) + Math.round(aS.chaos / 20);
       const sabResist = dS.defense / 30;
@@ -1358,7 +1384,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // INTIMIDATE (swagger × hype — weaken enemy's next attack)
-    if (roll > 48 && roll <= 56 && aS.swagger > 35 && aS.hype > 25) {
+    if (chosenAction === "intimidate") {
       updateTurnLabel(aEl, "😤 INTIMIDATING");
       const weakenPct = Math.round(35 + aS.swagger / 4);
       banner(isA ? "a" : "b", `😤 ${pick(intimidateLines)}...`, "intimidate");
@@ -1383,7 +1409,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
 
     // CLEANSE (stamina × wit — remove all debuffs + small heal)
     const hasDebuffs = (isA ? poison1 : poison2) > 0 || (isA ? burn1 : burn2) > 0 || (isA ? stun1 : stun2) || (isA ? sabotage1 : sabotage2) > 0;
-    if (hasDebuffs && Math.random() < (aS.stamina + aS.wit) / 300 + aS.luck / 500) {
+    if (chosenAction === "cleanse") {
       updateTurnLabel(aEl, "🧹 CLEANSING");
       banner(isA ? "a" : "b", `🧹 ${pick(cleanseLines)}`, "cleanse");
       playSound("cleanse");
@@ -1408,7 +1434,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // TAUNT (swagger — forces enemy to only normal attack next turn)
-    if (roll > 24 && roll <= 28 && aS.swagger > 40 && aS.hype > 30) {
+    if (chosenAction === "taunt") {
       updateTurnLabel(aEl, "😏 TAUNTING");
       if (isA) taunt2 = true; else taunt1 = true;
       const tDmg = Math.round(rand(2, 6) + aS.swagger / 16);
@@ -1429,7 +1455,7 @@ export async function animatedFight(f1, f2, refs, onEvent) {
     }
 
     // PRECISION STRIKE (focus — ignores all damage reductions)
-    if (roll > 18 && roll <= 24 && aS.focus > 50) {
+    if (chosenAction === "precision_strike") {
       updateTurnLabel(aEl, "🎯 PRECISION STRIKE");
       const pDmg = Math.round(rand(10, 18) + aS.focus / 8);
       banner(isA ? "a" : "b", `🎯 Lining up the shot...`, "special");
@@ -1459,8 +1485,6 @@ export async function animatedFight(f1, f2, refs, onEvent) {
       await delay(TURN_DELAY);
       continue;
     }
-
-    } // end if (!isTaunted) — taunted fighters skip to dodge/normal attack
 
     // DODGE (speed + wit bonus)
     const dodgeChance = dS.speed / 260 + dS.wit / 500;
